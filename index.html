@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 캘린더 대시보드</title>
+    <title>실시간 캘린더 다시보드</title>
 
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
@@ -27,29 +27,27 @@
         
         input[type="text"], textarea { padding: 10px 12px; border: 1px solid #ebd5de; border-radius: 8px; width: 100%; box-sizing: border-box; outline: none; background-color: #fffafb; font-family: inherit; font-size: 14px; }
         button { padding: 12px 16px; background-color: #dca8bd; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background-color 0.2s; font-family: inherit; width: 100%; }
-        button:hover { background-color: #c993a8; }
         
-        /* 달력 스타일 고정 */
-        .calendar-wrapper { flex-grow: 1; margin-top: 10px; min-height: 450px; }
-        #calendar { height: 100%; }
+        /* 🔥 달력 증발 방지: 최소 높이 강제 지정 */
+        .calendar-wrapper { flex-grow: 1; margin-top: 10px; min-height: 500px; position: relative; }
+        #calendar { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+        
         .fc-theme-standard td, .fc-theme-standard th { border-color: #f4e8ec !important; }
-        .fc-daygrid-day-frame { min-height: 90px !important; display: flex !important; flex-direction: column; padding: 1px; cursor: pointer; }
+        .fc-daygrid-day-frame { min-height: 80px !important; display: flex !important; flex-direction: column; padding: 1px; cursor: pointer; }
         .fc-daygrid-day-top { justify-content: center; padding: 2px 0; opacity: 0.8; font-size: 12px; }
-        .fc-daygrid-day-events { flex-grow: 1; display: flex; align-items: center; }
-        .fc-daygrid-event-harness { width: 100%; height: 100%; margin: 0 !important; }
-        .cell-fill-thumb { width: 100%; height: 100%; min-height: 50px; object-fit: cover; border-radius: 6px; display: block; }
-        .cell-fill-text { width: 100%; height: 100%; min-height: 50px; background-color: #fff0f5; color: #d16b8b; display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: 800; border-radius: 6px; }
+        .fc-daygrid-day-events { flex-grow: 1; display: flex; align-items: center; pointer-events: none; } /* 사진 클릭 방해 금지 */
+        .fc-daygrid-event-harness { width: 100%; height: 100%; margin: 0 !important; pointer-events: auto; }
+        .cell-fill-thumb { width: 100%; height: 100%; min-height: 45px; object-fit: cover; border-radius: 6px; display: block; }
+        .cell-fill-text { width: 100%; height: 100%; min-height: 45px; background-color: #fff0f5; color: #d16b8b; display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: 800; border-radius: 6px; }
 
-        /* 알림 및 백업 버튼 */
         .header-tools { display: flex; gap: 8px; align-items: center; }
-        .tool-btn { background: #fffafb; border: 1px solid #ebd5de; border-radius: 10px; padding: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .tool-btn { background: #fffafb; border: 1px solid #ebd5de; border-radius: 10px; padding: 6px 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .noti-dropdown { position: absolute; top: 55px; right: 0; width: 280px; max-height: 350px; background: #fff; border: 1px solid #ebd5de; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: none; flex-direction: column; z-index: 9000; }
 
-        /* 카드 피드 */
         .left-card { background: #fff; border: 1px solid #ebd5de; border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; }
         .left-card-img { width: 100%; height: 100px; object-fit: cover; }
         #recordDetailArea { flex-grow: 1; border: 1.5px dashed #ebd5de; border-radius: 12px; padding: 10px; background: #fffcfd; overflow-y: auto; }
-        .delete-btn { background: #ff7675; color: white; border-radius: 6px; padding: 4px 10px; font-size: 11px; float: right; }
+        .delete-btn { background: #ff7675; color: white; border-radius: 6px; padding: 4px 10px; font-size: 11px; float: right; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -61,7 +59,7 @@
             <h2>
                 <div style="display: flex; align-items: center; gap: 8px;">📅 캘린더 <input type="month" id="monthPicker"></div>
                 <div class="header-tools">
-                    <div class="tool-btn" id="backupBtn" title="데이터 백업하기">💾 백업</div>
+                    <div class="tool-btn" id="backupBtn">💾 백업</div>
                     <div class="tool-btn" id="bellBtn" style="position: relative;">🔔<div id="notiBadge" style="position:absolute; top:0; right:0; width:10px; height:10px; background:#ff7675; border-radius:50%; display:none; border:2px solid #fff;"></div></div>
                     <div class="noti-dropdown" id="notiDropdown">
                         <div style="padding:10px; border-bottom:1px solid #eee; font-weight:bold; color:#8e5c70;">최근 소식</div>
@@ -73,7 +71,7 @@
         </div>
 
         <div class="panel left-panel">
-            <h2><span id="leftPanelTitle">📜 최근 피드</span> <button id="showAllBtn" style="width:auto; padding:5px 10px; font-size:11px;">전체보기</button></h2>
+            <h2><span id="leftPanelTitle">📜 최근 피드</span> <button id="showAllBtn" style="width:auto; padding:5px 10px; font-size:11px; background:#f2c9d8; color:#5a404a; border-radius:8px;">전체보기</button></h2>
             <div id="leftRecordsArea" style="flex-grow:1; overflow-y:auto;"></div>
         </div>
 
@@ -82,7 +80,7 @@
             <p id="selectedDateText" style="color: #d16b8b; font-weight: 600; font-size: 14px; margin-bottom: 8px;">📍 날짜를 선택해 주세요.</p>
             <div style="display:flex; gap:5px; margin-bottom:8px;"><input type="text" id="titleInput" placeholder="제목"><input type="text" id="authorInput" placeholder="작성자" style="width:80px;"></div>
             <input type="text" id="subtitleInput" placeholder="소제목 (선택사항)" style="margin-bottom:8px;">
-            <textarea id="textContent" rows="2" placeholder="이곳에 내용을 기록하세요... (날짜를 바꿔도 사라지지 않아요!)" style="margin-bottom:8px;"></textarea>
+            <textarea id="textContent" rows="2" placeholder="내용을 기록하세요... (날짜 선택 후에도 유지됩니다!)" style="margin-bottom:8px;"></textarea>
             <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:12px; margin-bottom:8px; width:100%;">
             <button id="saveBtn" disabled style="background:#eee; color:#aaa;">날짜 선택 필요</button>
             <hr style="border:0.5px solid #ebd5de; margin:15px 0;">
@@ -108,33 +106,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
-        window.db = db; window.storage = storage;
 
-        let calendar; let currentSelectedDate = null; window.allRecords = []; isInitialLoad = true;
+        let calendar; let currentSelectedDate = null; window.allRecords = []; let isInitialLoad = true;
 
-        // 🔥 날짜 선택 통합 동기화 함수
         function selectDate(dateStr) {
             currentSelectedDate = dateStr;
-            // 1. 좌측 피드 제목 변경
             document.getElementById('leftPanelTitle').innerText = `📌 ${dateStr}`;
-            // 2. 우측 입력창 날짜 표시 변경
             document.getElementById('selectedDateText').innerText = `📍 입력 날짜: ${dateStr}`;
-            // 3. 저장 버튼 활성화
             const btn = document.getElementById('saveBtn');
             btn.disabled = false; btn.innerText = '저장하기'; btn.style.background = '#dca8bd'; btn.style.color = 'white';
-            // 4. 해당 날짜 기록 불러오기
             renderLeftPanel(dateStr);
-            // 5. 입력 필드는 초기화하지 않음 (대감의 하명!)
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-                initialView: 'dayGridMonth', locale: 'ko', selectable: true, height: '100%',
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth', locale: 'ko', height: '100%',
                 headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-                // 🔥 1. 날짜 칸 클릭 시
-                dateClick: (info) => selectDate(info.dateStr),
-                // 🔥 1. 사진(이벤트) 클릭 시에도 똑같이 날짜 선택!
-                eventClick: (info) => selectDate(info.event.startStr),
+                dateClick: (i) => selectDate(i.dateStr),
+                eventClick: (i) => { selectDate(i.event.startStr); i.jsEvent.preventDefault(); },
                 eventContent: (arg) => {
                     let img = arg.event.extendedProps.imageUrl;
                     return { html: img ? `<img src="${img}" class="cell-fill-thumb">` : `<div class="cell-fill-text">${arg.event.title.charAt(0)}</div>` };
@@ -149,8 +139,6 @@
                 const d = document.getElementById('notiDropdown'); d.style.display = d.style.display === 'flex' ? 'none' : 'flex';
                 document.getElementById('notiBadge').style.display = 'none'; e.stopPropagation();
             };
-
-            // 🔥 4. 백업 버튼 클릭 이벤트
             document.getElementById('backupBtn').onclick = () => backupData();
 
             onSnapshot(query(collection(db, "records"), orderBy("timestamp", "asc")), (snap) => {
@@ -162,7 +150,7 @@
                 renderNotificationFeed();
                 if (!isInitialLoad) { 
                     const t = document.getElementById('toastNotification');
-                    t.innerText = "🔔 업데이트가 반영되었습니다!"; t.style.transform = "translateY(0)"; t.style.opacity = "1";
+                    t.innerText = "🔔 소식이 업데이트되었습니다!"; t.style.transform = "translateY(0)"; t.style.opacity = "1";
                     setTimeout(() => { t.style.transform = "translateY(-100px)"; t.style.opacity = "0"; }, 3000);
                     document.getElementById('notiBadge').style.display = 'block';
                 }
@@ -172,7 +160,6 @@
             });
         });
 
-        // 📜 좌측 피드 리스트
         function renderLeftPanel(fDate) {
             const area = document.getElementById('leftRecordsArea');
             let filtered = fDate ? window.allRecords.filter(r => r.date === fDate) : [...window.allRecords].sort((a,b)=>b.timestamp - a.timestamp);
@@ -185,15 +172,14 @@
             `).join('');
         }
 
-        // 👀 상세 보기
         window.selectRecord = (rid) => {
             const r = window.allRecords.find(x => x.id === rid); if(!r) return;
             window.currentSelectedRecordId = rid;
             let html = `<div style="position:relative;"><button class="delete-btn" onclick="deleteRecord('${r.id}')">삭제</button>
-                <h3>${r.title}</h3>${r.subtitle?`<h5>${r.subtitle}</h5>`:''}<small>${r.author} | ${r.date}</small><p style="white-space:pre-wrap; line-height:1.6;">${r.text}</p>`;
+                <h3>${r.title}</h3>${r.subtitle?`<h5>${r.subtitle}</h5>`:''}<small>${r.author} | ${r.date}</small><p style="white-space:pre-wrap; line-height:1.6; margin:10px 0;">${r.text}</p>`;
             if(r.images) html += r.images.map(img => `<img src="${img}" style="width:100%; border-radius:8px; margin-bottom:10px;">`).join('');
             html += `<hr><small>댓글</small><div style="margin-top:10px;">${(r.comments||[]).map(c=>`<div style="background:#f9f9f9; padding:8px; border-radius:5px; margin-bottom:5px;"><small><strong>${c.author}</strong>: ${c.text}</small></div>`).join('')}</div>
-                <div style="display:flex; gap:5px; margin-top:10px;"><input type="text" id="cA_${r.id}" placeholder="이름" style="width:60px;"><input type="text" id="cT_${r.id}" placeholder="댓글..." style="flex:1;"><button onclick="addComment('${r.id}')" style="width:auto; padding:5px 10px; background:#dca8bd; color:white; border-radius:8px;">등록</button></div></div>`;
+                <div style="display:flex; gap:5px; margin-top:10px;"><input type="text" id="cA_${rid}" placeholder="이름" style="width:60px;"><input type="text" id="cT_${rid}" placeholder="댓글..." style="flex:1;"><button onclick="addComment('${rid}')" style="width:auto; padding:5px 10px; background:#dca8bd; color:white; border-radius:8px; border:none;">등록</button></div></div>`;
             document.getElementById('recordDetailArea').innerHTML = html;
         };
 
@@ -204,7 +190,6 @@
         };
         window.deleteRecord = async (rid) => { if(confirm('삭제하시겠습니까?')) await deleteDoc(doc(db, "records", rid)); };
 
-        // 🔔 알림 피드
         function renderNotificationFeed() {
             let list = [];
             window.allRecords.forEach(r => {
@@ -216,7 +201,6 @@
         }
         window.jumpTo = (id, d) => { document.getElementById('notiDropdown').style.display='none'; calendar.gotoDate(d); selectDate(d); window.selectRecord(id); };
 
-        // ✍️ 저장 로직
         document.getElementById('saveBtn').onclick = async () => {
             const t = document.getElementById('titleInput').value; const s = document.getElementById('subtitleInput').value; 
             const a = document.getElementById('authorInput').value; const txt = document.getElementById('textContent').value; const f = document.getElementById('imageUpload');
@@ -230,47 +214,28 @@
                     await uploadBytes(sRef, comp); urls.push(await getDownloadURL(sRef));
                 }
                 await addDoc(collection(db, "records"), { date: currentSelectedDate, title: t, subtitle: s, author: a, text: txt, images: urls, timestamp: Date.now(), comments: [] });
-                // 🔥 저장 후에는 입력창 초기화
                 document.getElementById('titleInput').value=''; document.getElementById('subtitleInput').value=''; document.getElementById('textContent').value=''; f.value='';
             } catch(e) { console.error(e); } finally { btn.disabled = false; btn.innerText = '저장하기'; }
         };
 
-        // 🔥 4. [사고 백업 시스템] 구현
         async function backupData() {
             if(!window.allRecords.length) { alert("백업할 데이터가 없습니다."); return; }
-            const confirmBackup = confirm("모든 기록과 사진을 압축 파일로 백업하시겠습니까? (사진이 많으면 시간이 걸릴 수 있습니다.)");
-            if(!confirmBackup) return;
-
-            const zip = new JSZip();
-            const imgFolder = zip.folder("images");
-            
-            // 1. 엑셀(CSV) 데이터 생성
-            let csvContent = "날짜,제목,소제목,작성자,본문,이미지링크\n";
+            if(!confirm("모든 기록과 사진을 압축 파일로 백업하시겠습니까?")) return;
+            const zip = new JSZip(); const imgFolder = zip.folder("images");
+            let csv = "날짜,제목,소제목,작성자,본문,이미지링크\n";
             for(let r of window.allRecords) {
-                const row = `"${r.date}","${r.title}","${r.subtitle||''}","${r.author}","${r.text.replace(/"/g, '""')}","${(r.images||[]).join(' | ')}"`;
-                csvContent += row + "\n";
-                
-                // 2. 사진 다운로드 및 압축 추가
-                if(r.images && r.images.length > 0) {
-                    for(let i=0; i < r.images.length; i++) {
+                csv += `"${r.date}","${r.title}","${r.subtitle||''}","${r.author}","${r.text.replace(/"/g, '""')}","${(r.images||[]).join(' | ')}"\n`;
+                if(r.images) {
+                    for(let i=0; i<r.images.length; i++) {
                         try {
-                            const response = await fetch(r.images[i]);
-                            const blob = await response.blob();
-                            const fileName = `${r.date}_${r.title}_(${i+1}).jpg`;
-                            imgFolder.file(fileName, blob);
-                        } catch(e) { console.log("사진 다운로드 실패:", r.images[i]); }
+                            const res = await fetch(r.images[i]); const blob = await res.blob();
+                            imgFolder.file(`${r.date}_${r.title}_(${i+1}).jpg`, blob);
+                        } catch(e) { console.log("사진 누락:", r.images[i]); }
                     }
                 }
             }
-            
-            // CSV 파일 추가 (BOM 추가하여 엑셀 한글 깨짐 방지)
-            zip.file("records_backup.csv", "\ufeff" + csvContent);
-            
-            // 3. 압축 완료 및 다운로드
-            zip.generateAsync({type:"blob"}).then(function(content) {
-                saveAs(content, `backup_${new Date().toISOString().slice(0,10)}.zip`);
-                showToast("💾 백업 파일 생성이 완료되었습니다!");
-            });
+            zip.file("records_backup.csv", "\ufeff" + csv);
+            zip.generateAsync({type:"blob"}).then(c => { saveAs(c, `backup_${new Date().toISOString().slice(0,10)}.zip`); });
         }
     </script>
 </body>
