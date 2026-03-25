@@ -25,7 +25,7 @@
         .panel { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(200, 180, 185, 0.12); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; min-height: 0; }
         h2 { font-size: 18px; margin: 0 0 10px 0; color: #a87b8d; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         
-        input[type="text"], textarea { padding: 10px; border: 1px solid var(--border-pink); border-radius: 8px; width: 100%; box-sizing: border-box; background: #fffafb; font-size: 14px; margin-bottom: 8px; font-family: inherit; }
+        input[type="text"], textarea, input[type="month"] { padding: 10px; border: 1px solid var(--border-pink); border-radius: 8px; width: 100%; box-sizing: border-box; background: #fffafb; font-size: 14px; margin-bottom: 8px; font-family: inherit; }
         button { padding: 12px; background: var(--main-pink); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; }
 
         .calendar-wrapper { flex: 1; min-height: 450px; position: relative; border: 1px solid #f4e8ec; border-radius: 12px; overflow: hidden; background: #fff; }
@@ -42,21 +42,29 @@
         
         .noti-dropdown { position: absolute; top: 45px; right: 0; width: 280px; max-height: 400px; background: #fff; border: 1px solid var(--border-pink); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: none; z-index: 9999; overflow-y: auto; }
         
-        #leftRecordsArea { flex: 1; overflow-y: auto; max-height: 600px; padding-right: 5px; }
-        #leftRecordsArea::-webkit-scrollbar, .noti-dropdown::-webkit-scrollbar { width: 6px; }
-        #leftRecordsArea::-webkit-scrollbar-thumb, .noti-dropdown::-webkit-scrollbar-thumb { background: #ebd5de; border-radius: 3px; }
+        /* 🔥 피드 영역: 쓸데없는 높이 제한(max-height) 삭제! 빈 공간 없이 꽉 찹니다 */
+        #leftRecordsArea { flex: 1; overflow-y: auto; padding-right: 5px; }
+        #leftRecordsArea::-webkit-scrollbar, .noti-dropdown::-webkit-scrollbar, #recordDetailArea::-webkit-scrollbar { width: 6px; }
+        #leftRecordsArea::-webkit-scrollbar-thumb, .noti-dropdown::-webkit-scrollbar-thumb, #recordDetailArea::-webkit-scrollbar-thumb { background: #ebd5de; border-radius: 3px; }
 
-        .left-card { border: 1px solid var(--border-pink); border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; background: #fff; }
+        .left-card { border: 1px solid var(--border-pink); border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; background: #fff; transition: transform 0.2s; }
+        .left-card:hover { transform: translateY(-2px); border-color: #c993a8; }
         .left-card-img { width: 100%; height: 100px; object-fit: cover; }
-        #recordDetailArea { flex: 1; border: 1.5px dashed var(--border-pink); border-radius: 15px; padding: 15px; overflow-y: auto; background: #fffcfd; min-height: 250px; }
         
-        .delete-btn { background: #ff7675; color: white; border-radius: 6px; padding: 4px 10px; font-size: 11px; float: right; cursor: pointer; border:none; margin-left: 5px; }
-        .edit-btn { background: #74b9ff; color: white; border-radius: 6px; padding: 4px 10px; font-size: 11px; float: right; cursor: pointer; border:none; }
+        #recordDetailArea { flex: 1; border: 1.5px dashed var(--border-pink); border-radius: 15px; padding: 15px; overflow-y: auto; background: #fffcfd; min-height: 250px; position: relative; }
+        
+        /* 🔥 수정/삭제 버튼 그룹 (우측 상단에 단정하게 고정) */
+        .action-btn-group { position: absolute; top: 15px; right: 15px; display: flex; gap: 6px; z-index: 10; }
+        .action-btn { border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; color: white; width: auto; }
+        .edit-btn { background: #74b9ff; }
+        .edit-btn:hover { background: #0984e3; }
+        .delete-btn { background: #ff7675; }
+        .delete-btn:hover { background: #d63031; }
     </style>
 </head>
 <body>
 
-    <div id="toastNotification" style="position: fixed; top: 20px; right: 20px; background: var(--main-pink); color: white; padding: 12px 20px; border-radius: 10px; z-index: 10001; opacity: 0; transition: 0.4s; pointer-events: none;">알림</div>
+    <div id="toastNotification" style="position: fixed; top: 20px; right: 20px; background: var(--main-pink); color: white; padding: 12px 20px; border-radius: 10px; z-index: 10001; opacity: 0; transition: 0.4s; pointer-events: none; font-weight: 600;">알림</div>
 
     <div class="dashboard-container">
         <div class="panel center-panel">
@@ -72,20 +80,20 @@
         </div>
 
         <div class="panel left-panel">
-            <h2><span id="leftPanelTitle">📜 피드</span> <button id="showAllBtn" style="width:auto; padding:4px 8px; font-size:11px;">전체보기</button></h2>
+            <h2><span id="leftPanelTitle">📜 피드</span> <button id="showAllBtn" style="width:auto; padding:4px 8px; font-size:11px;">전체</button></h2>
             <div id="leftRecordsArea"></div>
         </div>
 
         <div class="panel right-panel">
             <h2>✍️ 기록하기</h2>
-            <p id="selectedDateText" style="color:var(--main-pink); font-weight:700; margin-bottom:8px;">📍 날짜 선택 필요</p>
+            <p id="selectedDateText" style="color:var(--main-pink); font-weight:700; margin-bottom:8px;">📍 날짜를 선택해 주세요.</p>
             <div style="display:flex; gap:5px;"><input type="text" id="titleInput" placeholder="제목"><input type="text" id="authorInput" placeholder="이름" style="width:80px;"></div>
             <input type="text" id="subtitleInput" placeholder="소제목 (선택사항)">
             <textarea id="textContent" rows="2" placeholder="내용을 입력하세요..."></textarea>
             <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:11px; margin-bottom:8px; width:100%;">
             <button id="saveBtn" disabled>날짜 선택 후 저장</button>
             <hr style="border:0.5px solid var(--border-pink); margin:15px 0;">
-            <div id="recordDetailArea"></div>
+            <div id="recordDetailArea"><p style="text-align:center; color:#aaa; margin-top:50px;">날짜를 누르거나 피드에서 기록을 선택하세요.</p></div>
         </div>
     </div>
 
@@ -106,7 +114,7 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // 🔥 대감께서 하사하신 웹앱 주소를 찰떡같이 넣었사옵니다!
+        // 🔥 대감의 완벽한 앱스 스크립트 주소!
         const GAS_URL = "https://script.google.com/macros/s/AKfycby3bARyPmy1oNdNaqLXjUcxQYgrKFBMdvYB4fKwTtYfWPqBFq_nbOX-tHcjfoolJrsFdA/exec";
 
         let calendar; 
@@ -189,14 +197,22 @@
             const r = window.allRecords.find(x => x.id === rid); if(!r) return;
             window.currentSelectedId = rid;
             
-            let h = `<div style="position:relative;">
-                <button class="delete-btn" onclick="deleteRecord('${r.id}')">삭제</button>
-                <button class="edit-btn" onclick="editRecord('${r.id}')">수정</button>
-                <h3 style="margin:0; color:#8e5c70;">${r.title}</h3>${r.subtitle?`<h5 style="color:#a87b8d; margin:5px 0;">${r.subtitle}</h5>`:''}
-                <small>${r.author} | ${r.date}</small><p style="white-space:pre-wrap; line-height:1.6; margin:10px 0;">${r.text}</p>`;
-            if(r.images) h += r.images.map(img => `<img src="${img}" style="width:100%; border-radius:10px; margin-bottom:10px;">`).join('');
-            h += `<hr><small>댓글</small><div style="margin-top:10px;">${(r.comments||[]).map(c=>`<div style="background:#f9f9f9; padding:8px; border-radius:5px; margin-bottom:5px;"><small><strong>${c.author}</strong>: ${c.text}</small></div>`).join('')}</div>
-                <div style="display:flex; gap:5px; margin-top:10px;"><input type="text" id="cA_${rid}" placeholder="이름" style="width:60px; margin:0;"><input type="text" id="cT_${rid}" placeholder="댓글" style="flex:1; margin:0;"><button onclick="addComment('${rid}')" style="width:auto; padding:5px 10px; background:var(--main-pink); border:none; border-radius:5px; color:white;">🆗</button></div></div>`;
+            // 🔥 수정/삭제 버튼이 예쁘게 고정되도록 수정!
+            let h = `<div style="position:relative; padding-top: 5px;">
+                <div class="action-btn-group">
+                    <button class="action-btn edit-btn" onclick="editRecord('${r.id}')">수정</button>
+                    <button class="action-btn delete-btn" onclick="deleteRecord('${r.id}')">삭제</button>
+                </div>
+                <h3 style="margin:0 0 5px 0; color:#8e5c70; padding-right:90px;">${r.title}</h3>
+                ${r.subtitle?`<h5 style="color:#a87b8d; margin:0 0 10px 0;">${r.subtitle}</h5>`:''}
+                <div style="margin-bottom:15px;"><small style="color:#999;">✍️ ${r.author} | 📅 ${r.date}</small></div>
+                <p style="white-space:pre-wrap; line-height:1.7; color:#444; margin-bottom:20px;">${r.text}</p>`;
+            
+            if(r.images) h += r.images.map(img => `<img src="${img}" style="width:100%; border-radius:12px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">`).join('');
+            
+            h += `<hr style="border:0.5px solid #eee; margin:20px 0;"><small style="font-weight:bold; color:#8e5c70;">💬 댓글</small>
+                <div style="margin-top:10px;">${(r.comments||[]).map(c=>`<div style="background:#fdfafb; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #f4e8ec;"><small><strong>${c.author}</strong></small><p style="margin:4px 0 0 0; font-size:13px;">${c.text}</p></div>`).join('')}</div>
+                <div style="display:flex; gap:8px; margin-top:15px;"><input type="text" id="cA_${rid}" placeholder="이름" style="width:70px; margin:0;"><input type="text" id="cT_${rid}" placeholder="댓글 입력..." style="flex:1; margin:0;"><button onclick="addComment('${rid}')" style="width:auto; padding:6px 14px; background:var(--main-pink); border:none; border-radius:8px; color:white; font-size:13px;">등록</button></div></div>`;
             document.getElementById('recordDetailArea').innerHTML = h;
         };
 
@@ -230,7 +246,7 @@
             if(!a || !t) return;
             await updateDoc(doc(db, "records", rid), { comments: arrayUnion({ author:a, text:t, timestamp:Date.now() }) });
         };
-        window.deleteRecord = async (rid) => { if(confirm('삭제하시겠습니까?')) await deleteDoc(doc(db, "records", rid)); };
+        window.deleteRecord = async (rid) => { if(confirm('이 기록을 정말 삭제하시겠습니까?')) await deleteDoc(doc(db, "records", rid)); };
 
         function renderNoti() {
             let l = []; window.allRecords.forEach(r => {
@@ -238,10 +254,8 @@
                 (r.comments||[]).forEach(c => l.push({ type:'댓글', id:r.id, date:r.date, title:c.text, ts:c.timestamp }));
             });
             l.sort((a,b)=>b.ts - a.ts);
-            
-            document.getElementById('notiListArea').innerHTML = l.map(i => `<div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick="jumpTo('${i.id}', '${i.date}')"><small>${i.type} ${i.date}</small><br><span style="font-size:12px;">${i.title}</span></div>`).join('');
+            document.getElementById('notiListArea').innerHTML = l.map(i => `<div style="padding:12px; border-bottom:1px solid #f4e8ec; cursor:pointer;" onclick="jumpTo('${i.id}', '${i.date}')"><small style="color:#a87b8d; font-weight:bold;">${i.type} ${i.date}</small><br><span style="font-size:13px;">${i.title}</span></div>`).join('');
         }
-        
         window.jumpTo = (id, d) => { document.getElementById('notiDropdown').style.display='none'; calendar.gotoDate(d); selectDate(d); window.selectRecord(id); };
 
         document.getElementById('saveBtn').onclick = async () => {
@@ -265,15 +279,13 @@
                         const downloadUrl = await getDownloadURL(sRef);
                         urls.push(downloadUrl);
 
-                        // 🔥 구글 드라이브(GAS)로 자동 백업 요청 (no-cors 방패 장착!)
-                        if(GAS_URL !== "https://script.google.com/macros/s/AKfycby3bARyPmy1oNdNaqLXjUcxQYgrKFBMdvYB4fKwTtYfWPqBFq_nbOX-tHcjfoolJrsFdA/exec") {
-                            fetch(GAS_URL, {
-                                method: "POST",
-                                mode: "no-cors",
-                                headers: { "Content-Type": "text/plain" },
-                                body: JSON.stringify({ url: downloadUrl, name: `${currentSelectedDate}_${t}_${fileName}` })
-                            }).catch(e => console.log("드라이브 전송 실패:", e));
-                        }
+                        // 🔥 조건문 없이 바로 쏩니다! (대감이 주신 URL)
+                        fetch(GAS_URL, {
+                            method: "POST",
+                            mode: "no-cors",
+                            headers: { "Content-Type": "text/plain" },
+                            body: JSON.stringify({ url: downloadUrl, name: `${currentSelectedDate}_${t}_${fileName}` })
+                        }).catch(e => console.log("드라이브 전송 실패:", e));
                     }
                 }
 
