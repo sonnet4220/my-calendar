@@ -20,16 +20,22 @@
             .dashboard-container { flex-direction: row; height: 100vh; padding: 20px; overflow: hidden; }
             .left-panel { flex: 1; } .center-panel { flex: 2.8; } .right-panel { flex: 1.5; }
             body { overflow: hidden; }
+            .center-panel { min-height: 0 !important; } /* PC에서는 원래대로 */
         }
 
         .panel { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(200, 180, 185, 0.12); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; min-height: 0; }
+        
+        /* 🔥 모바일 달력 증발 방지 철근 콘크리트! (패널 자체가 쪼그라들지 않게 방어) */
+        .center-panel { min-height: 550px; }
+
         h2 { font-size: 18px; margin: 0 0 10px 0; color: #a87b8d; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         
         input[type="text"], textarea, input[type="month"] { padding: 10px; border: 1px solid var(--border-pink); border-radius: 8px; width: 100%; box-sizing: border-box; background: #fffafb; font-size: 14px; margin-bottom: 8px; font-family: inherit; }
         button { padding: 12px; background: var(--main-pink); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; }
 
-        .calendar-wrapper { flex: 1; min-height: 450px; position: relative; border: 1px solid #f4e8ec; border-radius: 12px; overflow: hidden; background: #fff; }
-        #calendar { height: 100% !important; table-layout: fixed !important; }
+        /* 🔥 달력 고정 비책 2: 100% 대신 사방으로 쫙 당겨서 고정! */
+        .calendar-wrapper { flex: 1; position: relative; border: 1px solid #f4e8ec; border-radius: 12px; overflow: hidden; background: #fff; min-height: 450px; }
+        #calendar { position: absolute; top: 0; bottom: 0; left: 0; right: 0; } /* 절대 좌표로 꽉 채움! 모바일 증발 완벽 해결 */
         
         .fc-daygrid-day-frame { height: 100% !important; min-height: 80px !important; display: flex !important; flex-direction: column; cursor: pointer; }
         .fc-daygrid-day-events { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0 !important; }
@@ -42,7 +48,6 @@
         
         .noti-dropdown { position: absolute; top: 45px; right: 0; width: 280px; max-height: 400px; background: #fff; border: 1px solid var(--border-pink); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: none; z-index: 9999; overflow-y: auto; }
         
-        /* 🔥 피드 영역: 쓸데없는 높이 제한(max-height) 삭제! 빈 공간 없이 꽉 찹니다 */
         #leftRecordsArea { flex: 1; overflow-y: auto; padding-right: 5px; }
         #leftRecordsArea::-webkit-scrollbar, .noti-dropdown::-webkit-scrollbar, #recordDetailArea::-webkit-scrollbar { width: 6px; }
         #leftRecordsArea::-webkit-scrollbar-thumb, .noti-dropdown::-webkit-scrollbar-thumb, #recordDetailArea::-webkit-scrollbar-thumb { background: #ebd5de; border-radius: 3px; }
@@ -53,7 +58,6 @@
         
         #recordDetailArea { flex: 1; border: 1.5px dashed var(--border-pink); border-radius: 15px; padding: 15px; overflow-y: auto; background: #fffcfd; min-height: 250px; position: relative; }
         
-        /* 🔥 수정/삭제 버튼 그룹 (우측 상단에 단정하게 고정) */
         .action-btn-group { position: absolute; top: 15px; right: 15px; display: flex; gap: 6px; z-index: 10; }
         .action-btn { border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; color: white; width: auto; }
         .edit-btn { background: #74b9ff; }
@@ -114,7 +118,7 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // 🔥 대감의 완벽한 앱스 스크립트 주소!
+        // 🔥 대감의 완벽한 앱스 스크립트 주소 그대로 유지!
         const GAS_URL = "https://script.google.com/macros/s/AKfycby3bARyPmy1oNdNaqLXjUcxQYgrKFBMdvYB4fKwTtYfWPqBFq_nbOX-tHcjfoolJrsFdA/exec";
 
         let calendar; 
@@ -141,7 +145,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-                initialView: 'dayGridMonth', locale: 'ko', height: '100%',
+                initialView: 'dayGridMonth', locale: 'ko',
+                height: '100%', // 사방향 absolute 좌표와 결합되어 모바일에서도 완벽하게 높이가 확보됩니다.
                 headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
                 dateClick: (i) => {
                     editingRecordId = null;
@@ -197,7 +202,6 @@
             const r = window.allRecords.find(x => x.id === rid); if(!r) return;
             window.currentSelectedId = rid;
             
-            // 🔥 수정/삭제 버튼이 예쁘게 고정되도록 수정!
             let h = `<div style="position:relative; padding-top: 5px;">
                 <div class="action-btn-group">
                     <button class="action-btn edit-btn" onclick="editRecord('${r.id}')">수정</button>
@@ -254,8 +258,10 @@
                 (r.comments||[]).forEach(c => l.push({ type:'댓글', id:r.id, date:r.date, title:c.text, ts:c.timestamp }));
             });
             l.sort((a,b)=>b.ts - a.ts);
-            document.getElementById('notiListArea').innerHTML = l.map(i => `<div style="padding:12px; border-bottom:1px solid #f4e8ec; cursor:pointer;" onclick="jumpTo('${i.id}', '${i.date}')"><small style="color:#a87b8d; font-weight:bold;">${i.type} ${i.date}</small><br><span style="font-size:13px;">${i.title}</span></div>`).join('');
+            
+            document.getElementById('notiListArea').innerHTML = l.map(i => `<div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick="jumpTo('${i.id}', '${i.date}')"><small>${i.type} ${i.date}</small><br><span style="font-size:12px;">${i.title}</span></div>`).join('');
         }
+        
         window.jumpTo = (id, d) => { document.getElementById('notiDropdown').style.display='none'; calendar.gotoDate(d); selectDate(d); window.selectRecord(id); };
 
         document.getElementById('saveBtn').onclick = async () => {
@@ -279,7 +285,7 @@
                         const downloadUrl = await getDownloadURL(sRef);
                         urls.push(downloadUrl);
 
-                        // 🔥 조건문 없이 바로 쏩니다! (대감이 주신 URL)
+                        // GAS로 무조건 배달 쏩니다!
                         fetch(GAS_URL, {
                             method: "POST",
                             mode: "no-cors",
