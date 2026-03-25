@@ -211,7 +211,7 @@
                     urls.push(downloadUrl);
 
                     // 🔥 구글 드라이브로 자동 전송!
-                    if(GAS_URL !== "여기에_방금_복사한_웹앱_주소를_넣으세요") {
+                    if(GAS_URL !== "https://script.google.com/macros/s/AKfycby3bARyPmy1oNdNaqLXjUcxQYgrKFBMdvYB4fKwTtYfWPqBFq_nbOX-tHcjfoolJrsFdA/exec") {
                         fetch(GAS_URL, {
                             method: "POST",
                             body: JSON.stringify({ url: downloadUrl, name: `${currentSelectedDate}_${t}_${fileName}` })
