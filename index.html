@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 캘린더 대시보드</title>
+
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+
+    <style>
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Pretendard', sans-serif; font-size: 14px; 
+            background-color: #fdf8f9; color: #4a4a4a;
+        }
+        .dashboard-container {
+            display: flex; flex-direction: column; height: 100vh;
+            padding: 15px; box-sizing: border-box; gap: 15px; 
+        }
+        .panel {
+            padding: 15px 20px; box-sizing: border-box; background-color: #ffffff; 
+            border-radius: 16px; box-shadow: 0 4px 12px rgba(200, 180, 185, 0.15); border: none;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        
+        .left-panel { flex: 1; }
+        .center-panel { flex: 2.5; display: flex; flex-direction: column; position: relative; }
+        .right-panel { flex: 1.5; gap: 10px; } 
+
+        h2 { font-size: 18px; margin-top: 0; color: #a87b8d; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        
+        input[type="text"], textarea {
+            padding: 10px 12px; border: 1px solid #ebd5de; border-radius: 8px; width: 100%;
+            box-sizing: border-box; outline: none; background-color: #fffafb;
+            font-family: inherit; font-size: 13px;
+        }
+        input[type="text"]:focus, textarea:focus { border-color: #d4aebf; }
+        
+        button {
+            padding: 10px 16px; background-color: #dca8bd; color: white; border: none;
+            border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 13px;
+            transition: background-color 0.2s; font-family: inherit; width: 100%;
+        }
+        button:hover { background-color: #c993a8; }
+        button:disabled { background-color: #eee; color: #aaa; cursor: not-allowed; }
+
+        input[type="month"] {
+            font-family: inherit; font-size: 14px; padding: 6px 10px; 
+            border: 1px solid #ebd5de; border-radius: 8px; color: #a87b8d; 
+            font-weight: 600; cursor: pointer; outline: none; background-color: #fffafb;
+        }
+        input[type="month"]:focus { border-color: #d4aebf; }
+
+        .calendar-wrapper {
+            flex-grow: 1; overflow-y: auto; margin-top: 10px; padding-right: 5px; height: 100%;
+        }
+        #calendar { height: 100%; }
+        .calendar-wrapper::-webkit-scrollbar { width: 6px; }
+        .calendar-wrapper::-webkit-scrollbar-thumb { background: #ebd5de; border-radius: 3px; }
+
+        /* 캘린더 테두리 색상 및 칸 채우기 로직 */
+        .fc-theme-standard td, .fc-theme-standard th { border-color: #f4e8ec !important; }
+        .fc-daygrid-day-frame {
+            min-height: 90px !important; display: flex !important;
+            flex-direction: column; padding: 2px;
+        }
+        .fc-daygrid-day-top { justify-content: center; padding: 2px 0; opacity: 0.8; }
+        .fc-daygrid-day-events {
+            flex-grow: 1; margin: 0 !important; padding: 0 !important;
+            display: flex; align-items: center; 
+        }
+        .fc-daygrid-event-harness { width: 100%; height: 100%; margin: 0 !important; }
+        .fc-daygrid-event-harness:nth-child(n+2) { display: none !important; }
+        .fc-event { 
+            border: none !important; background: transparent !important; box-shadow: none !important; 
+            width: 100%; height: 100%; display: flex;
+        }
+        .cell-fill-thumb {
+            width: 100%; height: 100%; min-height: 50px;
+            object-fit: cover; border-radius: 6px; display: block;
+        }
+        .cell-fill-text {
+            width: 100%; height: 100%; min-height: 50px;
+            background-color: #fff0f5; color: #d16b8b; display: flex; justify-content: center; align-items: center;
+            font-size: 13px; font-weight: 800; border-radius: 6px;
+        }
+
+        .left-card {
+            background: #fff; border: 1px solid #ebd5de; border-radius: 12px;
+            margin-bottom: 15px; cursor: pointer; overflow: hidden;
+            box-shadow: 0 2px 5px rgba(200, 180, 185, 0.1); transition: transform 0.2s;
+        }
+        .left-card:hover { transform: translateY(-2px); border-color: #c993a8; }
+        .left-card-img { width: 100%; height: 130px; object-fit: cover; }
+        .left-card-content { padding: 12px; }
+        .left-card-title { font-weight: 600; color: #8e5c70; font-size: 14px; margin-bottom: 4px; }
+        .left-card-date { font-size: 11px; color: #999; }
+
+        #recordDetailArea {
+            flex-grow: 1; border: 1.5px dashed #ebd5de; border-radius: 12px; padding: 15px; 
+            background: #fffcfd; overflow-y: auto; position: relative;
+        }
+        .delete-btn {
+            position: absolute; right: 12px; top: 12px; background: #ff7675; color: white; 
+            border-radius: 6px; padding: 4px 10px; font-size: 11px; width: auto; z-index: 10;
+        }
+        .delete-btn:hover { background: #d63031; }
+
+        /* 🔥 스르륵 알림 토스트 */
+        #toastNotification {
+            position: fixed; top: 20px; right: 20px; background: rgba(168, 123, 141, 0.95); color: white;
+            padding: 12px 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: 600; font-size: 14px; transform: translateY(-100px); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); z-index: 9999; pointer-events: none;
+        }
+        #toastNotification.show { transform: translateY(0); opacity: 1; }
+
+        /* 🔥 🔔 종모양 알림 버튼 & 드롭다운 디자인 */
+        .bell-btn-container { position: relative; }
+        .bell-btn {
+            background: #fffafb; border: 1px solid #ebd5de; border-radius: 50%;
+            width: 42px; height: 42px; font-size: 20px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: background 0.2s;
+        }
+        .bell-btn:hover { background: #f2c9d8; }
+        .noti-badge {
+            position: absolute; top: 0; right: 0; width: 12px; height: 12px;
+            background: #ff7675; border-radius: 50%; border: 2px solid #fff; display: none;
+        }
+        .noti-dropdown {
+            position: absolute; top: 50px; right: 0; width: 320px; max-height: 400px;
+            background: #ffffff; border: 1px solid #ebd5de; border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15); overflow-y: auto; z-index: 9000;
+            display: none; flex-direction: column;
+        }
+        .noti-dropdown-header {
+            padding: 12px 15px; border-bottom: 1px solid #f4e8ec; font-weight: bold; color: #8e5c70;
+            position: sticky; top: 0; background: #fff; z-index: 10;
+        }
+        .noti-item {
+            padding: 12px 15px; border-bottom: 1px solid #fcf0f4; cursor: pointer; transition: background 0.2s;
+        }
+        .noti-item:hover { background: #fffafb; }
+        .noti-item:last-child { border-bottom: none; }
+        .noti-meta { font-size: 11px; color: #a87b8d; margin-bottom: 4px; font-weight: 600; }
+        .noti-desc { font-size: 13px; color: #444; line-height: 1.4; }
+
+        @media (min-width: 768px) {
+            .dashboard-container { flex-direction: row; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toastNotification">🔔 알림이 도착했습니다.</div>
+
+    <div class="dashboard-container">
+        <div class="panel left-panel">
+            <h2>
+                <span id="leftPanelTitle">📜 최근 기록 피드</span>
+                <button id="showAllBtn" style="padding: 4px 8px; width: auto; font-size: 11px; background: #f2c9d8; color: #5a404a; border-radius: 6px;">전체보기</button>
+            </h2>
+            <div id="leftRecordsArea" style="flex-grow: 1; overflow-y: auto; padding-right: 5px;">
+                <p style="color: #aaa; font-size: 13px; text-align: center; margin-top: 30px;">기록을 불러오는 중...</p>
+            </div>
+        </div>
+
+        <div class="panel center-panel">
+            <h2 style="margin-bottom: 0; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    📅 캘린더
+                    <input type="month" id="monthPicker" title="원하는 달로 이동합니다">
+                </div>
+                
+                <div class="bell-btn-container" id="bellContainer">
+                    <div class="bell-btn" id="bellBtn">🔔<div class="noti-badge" id="notiBadge"></div></div>
+                    
+                    <div class="noti-dropdown" id="notiDropdown">
+                        <div class="noti-dropdown-header">최근 소식 (최대 20개)</div>
+                        <div id="notiListArea">
+                            <p style="text-align:center; color:#aaa; font-size:12px; padding: 20px;">불러오는 중...</p>
+                        </div>
+                    </div>
+                </div>
+            </h2>
+            <div class="calendar-wrapper">
+                <div id="calendar"></div>
+            </div>
+        </div>
+
+        <div class="panel right-panel">
+            <h2 style="margin-bottom: 5px; flex-shrink: 0;">✍️ 기록 남기기</h2>
+            <p id="selectedDateText" style="color: #d16b8b; font-weight: 600; font-size: 13px; margin: 0 0 10px 0; flex-shrink: 0;">📍 먼저 달력에서 날짜를 선택해주세요.</p>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-shrink: 0;">
+                <input type="text" id="titleInput" placeholder="제목" style="flex: 2;">
+                <input type="text" id="authorInput" placeholder="작성자" style="flex: 1;">
+            </div>
+            <input type="text" id="subtitleInput" placeholder="소제목 (선택사항)" style="margin-bottom: 8px; flex-shrink: 0;">
+            <textarea id="textContent" rows="2" placeholder="이곳에 본문을 기록하세요..." style="margin-bottom: 8px; flex-shrink: 0;"></textarea>
+            
+            <input type="file" id="imageUpload" accept="image/*" multiple style="font-size: 12px; color: #666; width: 100%; margin-bottom: 8px; flex-shrink: 0;">
+            <button id="saveBtn" disabled style="background-color: #eee; color: #aaa; flex-shrink: 0;">날짜를 선택해야 저장 가능합니다</button>
+
+            <hr style="width: 100%; border: 0.5px solid #ebd5de; margin: 15px 0 10px 0; flex-shrink: 0;">
+
+            <h2 style="margin-bottom: 10px; flex-shrink: 0;">👀 상세 보기 및 댓글</h2>
+            <div id="recordDetailArea">
+                <p style="color: #aaa; font-size: 13px; text-align: center; margin-top: 30px;">
+                    👈 좌측 피드나 달력에서<br>보고 싶은 기록을 선택해 주세요.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgd-IVsQQuvVBbq3edCuvJZaUIvVEjl08", 
+            authDomain: "calendar-project-7e1ce.firebaseapp.com",
+            projectId: "calendar-project-7e1ce",
+            storageBucket: "calendar-project-7e1ce.firebasestorage.app",
+            messagingSenderId: "921887406990",
+            appId: "1:921887406990:web:0bb6c93cf7f4ea549902df"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        window.firebaseDb = db;
+        window.firebaseDeleteDoc = deleteDoc;
+        window.firebaseDoc = doc;
+        window.firebaseUpdateDoc = updateDoc;
+        window.firebaseArrayUnion = arrayUnion;
+
+        let calendar;
+        let currentSelectedDate = null; 
+        window.allRecords = []; 
+        window.currentSelectedRecordId = null; 
+        let isInitialLoad = true; 
+
+        // 시간 예쁘게 포맷팅하는 함수
+        function formatTime(timestamp) {
+            const d = new Date(timestamp);
+            return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000); 
+        }
+
+        // 🔥 종 버튼 드롭다운 켜고 끄기 로직
+        document.getElementById('bellBtn').addEventListener('click', (e) => {
+            const dropdown = document.getElementById('notiDropdown');
+            if (dropdown.style.display === 'flex') {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'flex';
+                document.getElementById('notiBadge').style.display = 'none'; // 배지 끄기
+            }
+            e.stopPropagation(); // 클릭 이벤트 전파 방지
+        });
+
+        // 배경 누르면 알림창 닫히기
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('bellContainer').contains(e.target)) {
+                document.getElementById('notiDropdown').style.display = 'none';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: '' }, 
+                locale: 'ko', 
+                selectable: true,
+                contentHeight: 'auto',
+                aspectRatio: 1.1, 
+                
+                datesSet: function(info) {
+                    let date = info.view.currentStart;
+                    let year = date.getFullYear();
+                    let month = String(date.getMonth() + 1).padStart(2, '0');
+                    document.getElementById('monthPicker').value = `${year}-${month}`;
+                },
+                
+                dateClick: function(info) {
+                    currentSelectedDate = info.dateStr;
+                    document.getElementById('selectedDateText').innerText = "📍 입력 날짜: " + currentSelectedDate;
+                    
+                    const saveBtn = document.getElementById('saveBtn');
+                    saveBtn.disabled = false;
+                    saveBtn.innerText = '저장하기';
+                    saveBtn.style.backgroundColor = '#dca8bd';
+                    saveBtn.style.color = 'white';
+                    
+                    document.getElementById('titleInput').value = '';
+                    document.getElementById('subtitleInput').value = '';
+                    document.getElementById('authorInput').value = '';
+                    document.getElementById('textContent').value = '';
+                    document.getElementById('imageUpload').value = '';
+
+                    renderLeftPanel(currentSelectedDate);
+                },
+
+                eventContent: function(arg) {
+                    let imageUrl = arg.event.extendedProps.imageUrl;
+                    let title = arg.event.title;
+                    if (imageUrl) {
+                        return { html: `<img src="${imageUrl}" class="cell-fill-thumb" title="${title}">` };
+                    } else {
+                        return { html: `<div class="cell-fill-text" title="${title}">${title.charAt(0)}</div>` };
+                    }
+                }
+            });
+
+            calendar.render();
+
+            document.getElementById('monthPicker').addEventListener('change', function(e) {
+                if(e.target.value) { calendar.gotoDate(e.target.value + '-01'); }
+            });
+
+            document.getElementById('showAllBtn').addEventListener('click', () => { renderLeftPanel(null); });
+
+            const q = query(collection(db, "records"), orderBy("timestamp", "asc"));
+            onSnapshot(q, (snapshot) => {
+                window.allRecords = [];
+                calendar.removeAllEvents(); 
+
+                snapshot.forEach((firebaseDoc) => {
+                    const data = firebaseDoc.data();
+                    data.id = firebaseDoc.id; 
+                    window.allRecords.push(data);
+
+                    calendar.addEvent({
+                        title: data.title, 
+                        start: data.date,
+                        allDay: true,
+                        extendedProps: { imageUrl: data.images && data.images.length > 0 ? data.images[0] : null }
+                    });
+                });
+
+                // 🔥 알림창 데이터 새로 그리기
+                renderNotificationFeed();
+
+                if (!isInitialLoad) {
+                    showToast("🔔 새로운 소식이 있습니다!");
+                    document.getElementById('notiBadge').style.display = 'block'; // 빨간 점 켜기
+                }
+                isInitialLoad = false;
+
+                renderLeftPanel(currentSelectedDate ? currentSelectedDate : null);
+
+                if (window.currentSelectedRecordId) {
+                    // 삭제된 글이면 뷰어 초기화
+                    if(!window.allRecords.find(r => r.id === window.currentSelectedRecordId)) {
+                        document.getElementById('recordDetailArea').innerHTML = '<p style="text-align:center; color:#aaa; margin-top: 30px;">글이 삭제되었습니다.</p>';
+                        window.currentSelectedRecordId = null;
+                    } else {
+                        window.selectRecord(window.currentSelectedRecordId);
+                    }
+                }
+            });
+        });
+
+        // 🔥 알림 목록(종 버튼) 내용 구성 함수
+        function renderNotificationFeed() {
+            let notiList = [];
+
+            // 모든 기록과 댓글을 하나의 타임라인으로 합칩니다
+            window.allRecords.forEach(r => {
+                // 1. 글 작성 기록
+                notiList.push({
+                    type: 'record', recordId: r.id, date: r.date, 
+                    title: r.title, author: r.author, timestamp: r.timestamp
+                });
+                
+                // 2. 댓글 작성 기록
+                if (r.comments && r.comments.length > 0) {
+                    r.comments.forEach(c => {
+                        notiList.push({
+                            type: 'comment', recordId: r.id, date: r.date,
+                            author: c.author, timestamp: c.timestamp
+                        });
+                    });
+                }
+            });
+
+            // 시간순(최신순) 정렬
+            notiList.sort((a, b) => b.timestamp - a.timestamp);
+            
+            // 상위 20개만 자르기
+            notiList = notiList.slice(0, 20);
+
+            const area = document.getElementById('notiListArea');
+            if (notiList.length === 0) {
+                area.innerHTML = `<p style="text-align:center; color:#aaa; font-size:12px; padding: 20px;">최근 소식이 없습니다.</p>`;
+                return;
+            }
+
+            let html = '';
+            notiList.forEach(item => {
+                let badge = item.type === 'record' ? '<span style="color:#d16b8b;">[기록]</span>' : '<span style="color:#8e5c70;">[댓글]</span>';
+                let desc = item.type === 'record' 
+                    ? `${item.date} - ${item.title} - ${item.author}`
+                    : `${item.date} - 새 댓글이 추가되었습니다.`;
+
+                // 클릭하면 알림창 닫고 순간이동!
+                html += `
+                    <div class="noti-item" onclick="jumpToRecord('${item.recordId}', '${item.date}')">
+                        <div class="noti-meta">${badge} ${formatTime(item.timestamp)}</div>
+                        <div class="noti-desc">${desc}</div>
+                    </div>
+                `;
+            });
+            area.innerHTML = html;
+        }
+
+        // 🔥 알림 클릭 시 순간이동 마법 함수
+        window.jumpToRecord = function(recordId, dateStr) {
+            // 1. 알림창 닫기
+            document.getElementById('notiDropdown').style.display = 'none';
+            
+            // 2. 캘린더를 그 날짜의 달로 이동
+            calendar.gotoDate(dateStr);
+            
+            // 3. 해당 날짜 선택한 상태로 만들기
+            currentSelectedDate = dateStr;
+            document.getElementById('selectedDateText').innerText = "📍 입력 날짜: " + currentSelectedDate;
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = false; saveBtn.innerText = '저장하기';
+            saveBtn.style.backgroundColor = '#dca8bd'; saveBtn.style.color = 'white';
+            
+            // 4. 좌측 패널을 그 날짜 피드로 변경
+            renderLeftPanel(currentSelectedDate);
+            
+            // 5. 우측 뷰어에 상세 내용 띄우기
+            window.selectRecord(recordId);
+        };
+
+        function renderLeftPanel(filterDate = null) {
+            const container = document.getElementById('leftRecordsArea');
+            const titleEl = document.getElementById('leftPanelTitle');
+            
+            let filtered = window.allRecords;
+            if (filterDate) {
+                filtered = window.allRecords.filter(r => r.date === filterDate);
+                titleEl.innerText = `📌 ${filterDate} 기록`;
+            } else {
+                titleEl.innerText = `📜 전체 기록 피드`;
+                filtered = [...window.allRecords].sort((a, b) => b.timestamp - a.timestamp); 
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; font-size:13px; text-align:center; padding-top:20px;">이곳에 보여줄 기록이 없습니다.</p>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(record => {
+                let imgHtml = '';
+                if (record.images && record.images.length > 0) {
+                    imgHtml = `<img src="${record.images[0]}" class="left-card-img">`;
+                } else {
+                    imgHtml = `<div style="height: 80px; background: #fffafb; display: flex; align-items:center; justify-content:center; color:#d4aebf; font-size:12px;">첨부된 사진 없음</div>`;
+                }
+
+                html += `<div class="left-card" onclick="selectRecord('${record.id}')">
+                            ${imgHtml}
+                            <div class="left-card-content">
+                                <div class="left-card-title">${record.title}</div>
+                                <div class="left-card-date">${record.date} | ✍️ ${record.author}</div>
+                            </div>
+                        </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.selectRecord = function(recordId) {
+            const record = window.allRecords.find(r => r.id === recordId);
+            if(!record) return;
+
+            window.currentSelectedRecordId = recordId; 
+
+            let html = `
+                <div style="position: relative; padding: 5px;">
+                    <button class="delete-btn" onclick="deleteRecord('${record.id}')">삭제</button>
+                    <h3 style="margin: 0 0 5px 0; color: #8e5c70; font-size: 18px;">${record.title}</h3>
+                    ${record.subtitle ? `<h5 style="margin: 0 0 10px 0; color: #b58d9e; font-size: 14px; font-weight: 500;">${record.subtitle}</h5>` : ''}
+                    
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid #ebd5de; padding-bottom: 10px;">
+                        <strong style="color: #555; font-size: 13px;">✍️ ${record.author}</strong> 
+                        <span style="font-size: 12px; color: #999; margin-left: 5px;">${record.date} ${new Date(record.timestamp).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    
+                    <p style="margin: 0 0 20px 0; color: #444; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${record.text}</p>
+            `;
+
+            if (record.images && record.images.length > 0) {
+                html += `<div style="display: flex; flex-direction: column; gap: 15px;">`;
+                record.images.forEach(imgUrl => {
+                    html += `<img src="${imgUrl}" style="width: 100%; border-radius: 8px; border: 1px solid #eee; object-fit: contain;">`;
+                });
+                html += `</div>`;
+            }
+
+            html += `
+                <hr style="border: 0.5px solid #ebd5de; margin: 25px 0 15px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #8e5c70; font-size: 15px;">💬 댓글</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+            `;
+
+            if (record.comments && record.comments.length > 0) {
+                record.comments.forEach(c => {
+                    html += `
+                        <div style="background: #fff; border: 1px solid #ebd5de; padding: 10px; border-radius: 8px;">
+                            <strong style="font-size: 12px; color: #555;">${c.author}</strong>
+                            <span style="font-size: 10px; color: #999; margin-left: 5px;">${new Date(c.timestamp).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'})}</span>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; color: #333;">${c.text}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `<p style="font-size: 12px; color: #aaa; margin: 0;">아직 댓글이 없습니다.</p>`;
+            }
+
+            html += `</div>`; 
+
+            html += `
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="commentAuthor_${record.id}" placeholder="작성자" style="width: 70px; padding: 8px; font-size: 12px;">
+                    <input type="text" id="commentText_${record.id}" placeholder="댓글 달기..." style="flex-grow: 1; padding: 8px; font-size: 12px;" onkeypress="if(event.key==='Enter') addComment('${record.id}')">
+                    <button onclick="addComment('${record.id}')" style="width: auto; padding: 8px 15px; font-size: 12px; border-radius: 8px;">등록</button>
+                </div>
+            </div>`; 
+
+            document.getElementById('recordDetailArea').innerHTML = html;
+        };
+
+        window.addComment = async function(recordId) {
+            const authorInput = document.getElementById(`commentAuthor_${recordId}`);
+            const textInput = document.getElementById(`commentText_${recordId}`);
+            const author = authorInput.value.trim();
+            const text = textInput.value.trim();
+
+            if (!author || !text) {
+                alert('작성자와 댓글 내용을 모두 입력해주세요!');
+                return;
+            }
+
+            try {
+                const recordRef = window.firebaseDoc(window.firebaseDb, "records", recordId);
+                await window.firebaseUpdateDoc(recordRef, {
+                    comments: window.firebaseArrayUnion({
+                        author: author,
+                        text: text,
+                        timestamp: Date.now()
+                    })
+                });
+            } catch (error) {
+                console.error("댓글 저장 중 에러:", error);
+                alert("댓글 등록에 실패했습니다.");
+            }
+        };
+
+        window.deleteRecord = async function(recordId) {
+            if(confirm('정말 이 기록을 삭제할까요? (사진과 댓글도 모두 지워집니다)')) {
+                try {
+                    await window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDb, "records", recordId));
+                } catch(e) { alert("삭제 중 오류가 발생했습니다."); console.error(e); }
+            }
+        };
+
+        document.getElementById('saveBtn').addEventListener('click', async function() {
+            if (!currentSelectedDate) { alert('달력에서 날짜를 선택해주세요!'); return; }
+            
+            const title = document.getElementById('titleInput').value.trim();
+            const subtitle = document.getElementById('subtitleInput').value.trim();
+            const author = document.getElementById('authorInput').value.trim();
+            const text = document.getElementById('textContent').value.trim();
+            const fileInput = document.getElementById('imageUpload');
+
+            if (!title || !author || !text) { alert('제목, 작성자, 본문은 필수입니다!'); return; }
+            if (fileInput.files.length > 4) { alert('사진은 최대 4장까지만 가능해요!'); return; }
+
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true; saveBtn.innerText = '업로드 중...';
+
+            try {
+                let imageUrls = [];
+                if (fileInput.files.length > 0) {
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        let file = fileInput.files[i];
+                        const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1200, useWebWorker: true };
+                        
+                        try {
+                            const compressedFile = await imageCompression(file, options);
+                            const fileName = Date.now() + '_' + compressedFile.name; 
+                            const storageRef = ref(storage, 'images/' + fileName);
+                            await uploadBytes(storageRef, compressedFile);
+                            imageUrls.push(await getDownloadURL(storageRef));
+                        } catch (e) {
+                            const storageRef = ref(storage, 'images/' + Date.now() + '_' + file.name);
+                            await uploadBytes(storageRef, file);
+                            imageUrls.push(await getDownloadURL(storageRef));
+                        }
+                    }
+                }
+
+                await addDoc(collection(db, "records"), {
+                    date: currentSelectedDate, title: title, subtitle: subtitle,
+                    author: author, text: text, images: imageUrls, timestamp: Date.now(),
+                    comments: [] 
+                });
+
+                document.getElementById('titleInput').value = ''; document.getElementById('subtitleInput').value = '';
+                document.getElementById('textContent').value = ''; fileInput.value = '';
+                
+            } catch (error) { alert('저장 실패했습니다.'); console.error(error);
+            } finally { saveBtn.disabled = false; saveBtn.innerText = '저장하기'; }
+        });
+    </script>
+</body>
+</html>
