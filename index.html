@@ -22,31 +22,34 @@
             body { overflow: hidden; }
         }
 
-        .panel { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(200, 180, 185, 0.12); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+        .panel { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(200, 180, 185, 0.12); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; min-height: 0; }
+        h2 { font-size: 18px; margin: 0 0 10px 0; color: #a87b8d; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        
+        input[type="text"], textarea { padding: 10px; border: 1px solid var(--border-pink); border-radius: 8px; width: 100%; box-sizing: border-box; background: #fffafb; font-size: 14px; margin-bottom: 8px; font-family: inherit; }
+        button { padding: 12px; background: var(--main-pink); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; }
 
-        h2 { font-size: 18px; margin: 0 0 10px 0; color: #a87b8d; display: flex; align-items: center; justify-content: space-between; }
-        input[type="text"], textarea, input[type="month"] { padding: 10px; border: 1px solid var(--border-pink); border-radius: 8px; width: 100%; box-sizing: border-box; background: #fffafb; font-size: 14px; margin-bottom: 8px; font-family: inherit; }
-        button { padding: 12px; background: var(--main-pink); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-family: inherit; }
-        button:disabled { background: #eee; color: #aaa; }
-
-        .calendar-wrapper { flex: 1; margin-top: 5px; min-height: 500px; background: #fff; border: 1px solid #f4e8ec; border-radius: 12px; }
-        #calendar { height: 100% !important; min-height: 500px; }
-
-        .fc-daygrid-day-frame { min-height: 80px !important; display: flex !important; flex-direction: column; cursor: pointer; }
-        .fc-daygrid-day-events { flex: 1; display: flex; align-items: center; justify-content: center; }
-        .thumb-box { width: 35px; height: 35px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-pink); }
+        .calendar-wrapper { flex: 1; min-height: 450px; position: relative; border: 1px solid #f4e8ec; border-radius: 12px; overflow: hidden; background: #fff; }
+        #calendar { height: 100% !important; table-layout: fixed !important; }
+        
+        .fc-daygrid-day-frame { height: 100% !important; min-height: 80px !important; display: flex !important; flex-direction: column; cursor: pointer; }
+        .fc-daygrid-day-events { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0 !important; }
+        .thumb-box { width: 40px; height: 40px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-pink); pointer-events: none; }
         .cell-img { width: 100%; height: 100%; object-fit: cover; }
-        .cell-letter { width: 35px; height: 35px; background: #fff0f5; color: #d16b8b; display: flex; justify-content: center; align-items: center; font-weight: 800; border-radius: 6px; font-size: 12px; }
+        .cell-letter { width: 40px; height: 40px; background: #fff0f5; color: #d16b8b; display: flex; justify-content: center; align-items: center; font-weight: 800; border-radius: 8px; font-size: 14px; }
 
-        .header-tools { display: flex; gap: 6px; position: relative; }
-        .tool-btn { background: #fffafb; border: 1px solid var(--border-pink); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 13px; }
-        .noti-dropdown { position: absolute; top: 45px; right: 0; width: 260px; max-height: 350px; background: #fff; border: 1px solid var(--border-pink); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: none; z-index: 9999; }
+        .header-tools { display: flex; gap: 6px; }
+        .tool-btn { background: #fffafb; border: 1px solid var(--border-pink); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 14px; }
         
-        #recordDetailArea { flex: 1; border: 1.5px dashed var(--border-pink); border-radius: 15px; padding: 15px; overflow-y: auto; background: #fffcfd; min-height: 200px; }
+        .noti-dropdown { position: absolute; top: 45px; right: 0; width: 280px; max-height: 400px; background: #fff; border: 1px solid var(--border-pink); border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: none; z-index: 9999; overflow-y: auto; }
+        
+        #leftRecordsArea { flex: 1; overflow-y: auto; max-height: 600px; padding-right: 5px; }
+        #leftRecordsArea::-webkit-scrollbar, .noti-dropdown::-webkit-scrollbar { width: 6px; }
+        #leftRecordsArea::-webkit-scrollbar-thumb, .noti-dropdown::-webkit-scrollbar-thumb { background: #ebd5de; border-radius: 3px; }
+
         .left-card { border: 1px solid var(--border-pink); border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; background: #fff; }
-        .left-card-img { width: 100%; height: 90px; object-fit: cover; }
+        .left-card-img { width: 100%; height: 100px; object-fit: cover; }
+        #recordDetailArea { flex: 1; border: 1.5px dashed var(--border-pink); border-radius: 15px; padding: 15px; overflow-y: auto; background: #fffcfd; min-height: 250px; }
         
-        /* 🔥 수정/삭제 버튼 스타일 */
         .delete-btn { background: #ff7675; color: white; border-radius: 6px; padding: 4px 10px; font-size: 11px; float: right; cursor: pointer; border:none; margin-left: 5px; }
         .edit-btn { background: #74b9ff; color: white; border-radius: 6px; padding: 4px 10px; font-size: 11px; float: right; cursor: pointer; border:none; }
     </style>
@@ -58,8 +61,8 @@
     <div class="dashboard-container">
         <div class="panel center-panel">
             <h2>
-                <div style="display:flex; align-items:center; gap:5px;">📅 <input type="month" id="monthPicker" style="margin:0; width:auto; border:none; background:transparent; font-size:16px; font-weight:bold; color:#a87b8d;"></div>
-                <div class="header-tools">
+                <div style="display:flex; align-items:center; gap:8px;">📅 캘린더 <input type="month" id="monthPicker" style="width:auto; padding:3px; font-size:12px; margin:0;"></div>
+                <div style="display:flex; gap:6px; position:relative;">
                     <div class="tool-btn" id="backupBtn">💾 백업</div>
                     <div class="tool-btn" id="bellBtn">🔔<div id="notiBadge" style="position:absolute; top:0; right:0; width:8px; height:8px; background:#ff7675; border-radius:50%; display:none;"></div></div>
                     <div class="noti-dropdown" id="notiDropdown"><div id="notiListArea"></div></div>
@@ -69,17 +72,17 @@
         </div>
 
         <div class="panel left-panel">
-            <h2>📜 피드 <button id="showAllBtn" style="width:auto; padding:3px 8px; font-size:11px;">전체</button></h2>
-            <div id="leftRecordsArea" style="flex:1; overflow-y:auto;"></div>
+            <h2><span id="leftPanelTitle">📜 피드</span> <button id="showAllBtn" style="width:auto; padding:4px 8px; font-size:11px;">전체보기</button></h2>
+            <div id="leftRecordsArea"></div>
         </div>
 
         <div class="panel right-panel">
             <h2>✍️ 기록하기</h2>
             <p id="selectedDateText" style="color:var(--main-pink); font-weight:700; margin-bottom:8px;">📍 날짜 선택 필요</p>
-            <div style="display:flex; gap:5px;"><input type="text" id="titleInput" placeholder="제목"><input type="text" id="authorInput" placeholder="이름" style="width:70px;"></div>
+            <div style="display:flex; gap:5px;"><input type="text" id="titleInput" placeholder="제목"><input type="text" id="authorInput" placeholder="이름" style="width:80px;"></div>
             <input type="text" id="subtitleInput" placeholder="소제목 (선택사항)">
             <textarea id="textContent" rows="2" placeholder="내용을 입력하세요..."></textarea>
-            <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:11px; margin-bottom:8px;">
+            <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:11px; margin-bottom:8px; width:100%;">
             <button id="saveBtn" disabled>날짜 선택 후 저장</button>
             <hr style="border:0.5px solid var(--border-pink); margin:15px 0;">
             <div id="recordDetailArea"></div>
@@ -103,14 +106,14 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        const GAS_URL = "여기에_방금_복사한_웹앱_주소를_넣으세요";
+        // 🔥 대감께서 하사하신 웹앱 주소를 찰떡같이 넣었사옵니다!
+        const GAS_URL = "https://script.google.com/macros/s/AKfycby3bARyPmy1oNdNaqLXjUcxQYgrKFBMdvYB4fKwTtYfWPqBFq_nbOX-tHcjfoolJrsFdA/exec";
 
         let calendar; 
         let currentSelectedDate = null; 
         window.allRecords = []; 
         let isInitialLoad = true;
         
-        // 🔥 수정 모드 관리를 위한 변수들
         let editingRecordId = null;
         let originalImages = [];
 
@@ -121,7 +124,6 @@
             const b = document.getElementById('saveBtn');
             b.disabled = false; 
             
-            // 날짜를 새로 고르면 수정 모드를 살짝 초기화해줍니다.
             if (!editingRecordId) {
                 b.innerText = '저장하기';
                 b.style.background = 'var(--main-pink)';
@@ -134,7 +136,7 @@
                 initialView: 'dayGridMonth', locale: 'ko', height: '100%',
                 headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
                 dateClick: (i) => {
-                    editingRecordId = null; // 달력 빈칸 누르면 수정모드 취소
+                    editingRecordId = null;
                     document.getElementById('titleInput').value=''; document.getElementById('subtitleInput').value=''; document.getElementById('textContent').value='';
                     selectDate(i.dateStr);
                 },
@@ -172,11 +174,13 @@
         function renderLeftPanel(fDate) {
             const area = document.getElementById('leftRecordsArea');
             let filtered = fDate ? window.allRecords.filter(r => r.date === fDate) : [...window.allRecords].sort((a,b)=>b.timestamp - a.timestamp);
-            if(!filtered.length) { area.innerHTML = '<p style="text-align:center; color:#aaa; font-size:12px;">기록 없음</p>'; return; }
+            document.getElementById('leftPanelTitle').innerText = fDate ? `📌 ${fDate}` : `📜 피드`;
+            
+            if(!filtered.length) { area.innerHTML = '<p style="text-align:center; color:#aaa; font-size:12px; padding: 20px 0;">기록이 없습니다.</p>'; return; }
             area.innerHTML = filtered.map(r => `
                 <div class="left-card" onclick="selectRecord('${r.id}')">
                     ${r.images?.[0] ? `<img src="${r.images[0]}" class="left-card-img">` : '<div style="height:40px; background:#fffafb;"></div>'}
-                    <div style="padding:8px;"><strong>${r.title}</strong><br><small>${r.date}</small></div>
+                    <div style="padding:10px;"><strong>${r.title}</strong><br><small style="color:#999;">${r.date}</small></div>
                 </div>
             `).join('');
         }
@@ -185,7 +189,6 @@
             const r = window.allRecords.find(x => x.id === rid); if(!r) return;
             window.currentSelectedId = rid;
             
-            // 🔥 수정 버튼 추가!
             let h = `<div style="position:relative;">
                 <button class="delete-btn" onclick="deleteRecord('${r.id}')">삭제</button>
                 <button class="edit-btn" onclick="editRecord('${r.id}')">수정</button>
@@ -197,34 +200,28 @@
             document.getElementById('recordDetailArea').innerHTML = h;
         };
 
-        // 🔥 기록 수정 마법 함수
         window.editRecord = (rid) => {
             const r = window.allRecords.find(x => x.id === rid); if(!r) return;
             
             editingRecordId = rid;
-            originalImages = r.images || []; // 기존 사진 기억해두기
+            originalImages = r.images || []; 
 
-            // 1. 위쪽 입력칸에 기존 데이터 쫙 뿌려주기
             document.getElementById('titleInput').value = r.title;
             document.getElementById('subtitleInput').value = r.subtitle || '';
             document.getElementById('authorInput').value = r.author;
             document.getElementById('textContent').value = r.text;
             
-            // 2. 해당 날짜로 달력 선택 상태 맞추기
             selectDate(r.date); 
             calendar.gotoDate(r.date);
 
-            // 3. 버튼 변신
             const btn = document.getElementById('saveBtn');
             btn.innerText = '수정하기';
-            btn.style.background = '#8e5c70'; // 수정 모드일 때는 좀 더 진한 색으로!
+            btn.style.background = '#8e5c70'; 
             
-            // 4. 알림 띄우기
             const t = document.getElementById('toastNotification');
-            t.innerText = "✍️ 수정 모드: 위쪽 칸에서 내용을 수정하고 저장하세요!"; 
+            t.innerText = "✍️ 수정 모드: 위쪽 칸에서 내용을 수정하세요!"; 
             t.style.opacity = "1"; setTimeout(() => { t.style.opacity = "0"; }, 3000);
             
-            // 5. 모바일 배려: 위로 스크롤 올려주기
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
@@ -241,11 +238,12 @@
                 (r.comments||[]).forEach(c => l.push({ type:'댓글', id:r.id, date:r.date, title:c.text, ts:c.timestamp }));
             });
             l.sort((a,b)=>b.ts - a.ts);
-            document.getElementById('notiListArea').innerHTML = l.slice(0,12).map(i => `<div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick="jumpTo('${i.id}', '${i.date}')"><small>${i.type} ${i.date}</small><br><span style="font-size:12px;">${i.title}</span></div>`).join('');
+            
+            document.getElementById('notiListArea').innerHTML = l.map(i => `<div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onclick="jumpTo('${i.id}', '${i.date}')"><small>${i.type} ${i.date}</small><br><span style="font-size:12px;">${i.title}</span></div>`).join('');
         }
+        
         window.jumpTo = (id, d) => { document.getElementById('notiDropdown').style.display='none'; calendar.gotoDate(d); selectDate(d); window.selectRecord(id); };
 
-        // 🔥 저장 및 수정 로직 통합
         document.getElementById('saveBtn').onclick = async () => {
             const t = document.getElementById('titleInput').value; const s = document.getElementById('subtitleInput').value; 
             const a = document.getElementById('authorInput').value; const txt = document.getElementById('textContent').value; const f = document.getElementById('imageUpload');
@@ -255,10 +253,8 @@
             btn.disabled = true; btn.innerText = editingRecordId ? '수정 중...' : '저장 중...';
             
             try {
-                // 기존 사진을 기본으로 깔고 갑니다.
                 let urls = [...originalImages]; 
                 
-                // 만약 새 사진을 올렸다면 기존 사진을 대체합니다.
                 if (f.files.length > 0) {
                     urls = []; 
                     for(let file of f.files) {
@@ -269,22 +265,23 @@
                         const downloadUrl = await getDownloadURL(sRef);
                         urls.push(downloadUrl);
 
-                        if(GAS_URL !== "여기에_방금_복사한_웹앱_주소를_넣으세요") {
+                        // 🔥 구글 드라이브(GAS)로 자동 백업 요청 (no-cors 방패 장착!)
+                        if(GAS_URL !== "https://script.google.com/macros/s/AKfycby3bARyPmy1oNdNaqLXjUcxQYgrKFBMdvYB4fKwTtYfWPqBFq_nbOX-tHcjfoolJrsFdA/exec") {
                             fetch(GAS_URL, {
                                 method: "POST",
+                                mode: "no-cors",
+                                headers: { "Content-Type": "text/plain" },
                                 body: JSON.stringify({ url: downloadUrl, name: `${currentSelectedDate}_${t}_${fileName}` })
                             }).catch(e => console.log("드라이브 전송 실패:", e));
                         }
                     }
                 }
 
-                // 🔥 수정 모드일 때는 updateDoc, 새 글일 때는 addDoc!
                 if (editingRecordId) {
                     await updateDoc(doc(db, "records", editingRecordId), { 
                         date: currentSelectedDate, title: t, subtitle: s, author: a, text: txt, images: urls
-                        // 댓글과 타임스탬프는 수정하지 않고 그대로 둡니다!
                     });
-                    editingRecordId = null; // 수정 모드 종료
+                    editingRecordId = null; 
                     originalImages = [];
                 } else {
                     await addDoc(collection(db, "records"), { 
@@ -292,7 +289,6 @@
                     });
                 }
 
-                // 성공 후 폼 초기화
                 document.getElementById('titleInput').value=''; document.getElementById('subtitleInput').value=''; document.getElementById('textContent').value=''; f.value='';
                 btn.innerText = '저장하기';
                 btn.style.background = 'var(--main-pink)';
