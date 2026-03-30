@@ -15,7 +15,7 @@
         :root { --main-pink: #dca8bd; --bg-pink: #fdf8f9; --border-pink: #ebd5de; }
         body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-pink); color: #4a4a4a; min-height: 100vh; font-size: 14px; word-break: keep-all; }
         
-        .dashboard-container { display: flex; flex-direction: column; padding: 10px; gap: 15px; box-sizing: border-box; width: 100%; }
+        .dashboard-container { display: flex; flex-direction: column; padding: 10px; gap: 15px; box-sizing: border-box; width: 100%; transition: all 0.3s; }
 
         .center-panel { order: 1; }
         .right-panel { order: 2; }
@@ -24,7 +24,7 @@
         .calendar-wrapper { height: 450px; position: relative; border: 1px solid #f4e8ec; border-radius: 12px; overflow: hidden; background: #fff; margin-top: 5px; }
         #leftRecordsArea { overflow-y: auto; max-height: 350px; padding-right: 5px; }
 
-        .panel { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(200, 180, 185, 0.12); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; min-height: 0; }
+        .panel { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(200, 180, 185, 0.12); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; min-height: 0; transition: all 0.3s; }
         h2 { font-size: 18px; margin: 0 0 10px 0; color: #a87b8d; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         
         input[type="text"], textarea, input[type="month"] { padding: 10px; border: 1px solid var(--border-pink); border-radius: 8px; width: 100%; box-sizing: border-box; background: #fffafb; font-size: 14px; margin-bottom: 8px; font-family: inherit; }
@@ -67,6 +67,33 @@
         .thumb-nav button { background: none; border: none; color: white; font-size: 10px; cursor: pointer; padding: 2px 4px; width: auto; font-weight: bold; }
 
         /* ========================================= */
+        /* 🔥 피드 전체화면(갤러리) 모드 비술 */
+        /* ========================================= */
+        .dashboard-container.feed-fullscreen .center-panel,
+        .dashboard-container.feed-fullscreen .right-panel {
+            display: none !important; /* 전체화면 시 다른 패널은 숨김 */
+        }
+        .dashboard-container.feed-fullscreen .left-panel {
+            flex: 1 1 100% !important;
+            height: 100vh !important;
+            max-height: none !important;
+            order: 1 !important;
+        }
+        .dashboard-container.feed-fullscreen #leftRecordsArea {
+            max-height: calc(100vh - 80px) !important; /* 스크롤 높이 꽉 채우기 */
+            display: grid; /* 🔥 바둑판 배열 마법 */
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            align-content: start;
+        }
+        .dashboard-container.feed-fullscreen .left-card {
+            margin-bottom: 0; /* 그리드 갭으로 대체 */
+        }
+        .dashboard-container.feed-fullscreen .left-card-img {
+            height: 140px; /* 썸네일도 더 시원하게! */
+        }
+
+        /* ========================================= */
         /* 🔥 PC 화면 비율 유지 */
         @media (min-width: 1024px) {
             .dashboard-container { flex-direction: row; height: 100vh; padding: 20px; overflow: hidden; }
@@ -79,7 +106,7 @@
         }
 
         /* ========================================= */
-        /* 🔥 모바일 초정밀 다이어트 (폰트 & 여백 축소) */
+        /* 🔥 모바일 초정밀 다이어트 */
         @media (max-width: 768px) {
             body { font-size: 13px; }
             .dashboard-container { padding: 6px; gap: 10px; }
@@ -89,18 +116,14 @@
             input[type="text"], textarea, input[type="month"] { font-size: 13px; padding: 8px; margin-bottom: 6px; }
             button { font-size: 13px; padding: 10px; border-radius: 10px; }
             
-            /* 달력 크기도 살짝 컴팩트하게 */
             .calendar-wrapper { min-height: 380px; height: 380px; margin-top: 2px; }
             .fc-daygrid-day-top { font-size: 10px !important; padding: 1px 0 !important; }
             .thumb-box { width: 30px; height: 30px; }
             .cell-letter { width: 30px; height: 30px; font-size: 11px; }
 
-            /* 버튼류 크기 다이어트 */
             .tool-btn { font-size: 12px; padding: 4px 8px; }
             .action-btn { font-size: 10px; padding: 5px 10px; }
-            #showAllBtn { font-size: 10px !important; padding: 2px 6px !important; }
-
-            /* 피드 및 상세 뷰어 여백 축소 */
+            
             #leftRecordsArea { max-height: 280px; }
             .left-card-img { height: 80px; }
             .left-card > div { padding: 8px !important; }
@@ -110,8 +133,12 @@
             #recordDetailArea h5 { font-size: 13px; margin-bottom: 8px !important; }
             #recordDetailArea p { font-size: 13px; line-height: 1.6; margin-bottom: 12px !important; }
             
-            /* 썸네일 미리보기 크기 축소 */
             .edit-thumb-wrap { width: 55px; height: 55px; }
+
+            /* 모바일에서 전체화면일 때 바둑판 크기 조정 */
+            .dashboard-container.feed-fullscreen #leftRecordsArea {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
         }
     </style>
 </head>
@@ -119,7 +146,7 @@
 
     <div id="toastNotification" style="position: fixed; top: 20px; right: 20px; background: var(--main-pink); color: white; padding: 12px 20px; border-radius: 10px; z-index: 10001; opacity: 0; transition: 0.4s; pointer-events: none; font-weight: 600; font-size: 13px;">알림</div>
 
-    <div class="dashboard-container">
+    <div class="dashboard-container" id="mainContainer">
         <div class="panel center-panel">
             <h2>
                 <div style="display:flex; align-items:center; gap:6px;">📅 <input type="month" id="monthPicker" style="margin:0; width:auto; border:none; background:transparent; font-size:15px; font-weight:bold; color:#a87b8d; padding:0;"></div>
@@ -133,7 +160,14 @@
         </div>
 
         <div class="panel left-panel">
-            <h2><span id="leftPanelTitle">📜 피드</span> <button id="showAllBtn" style="width:auto; padding:3px 8px; font-size:11px;">전체</button></h2>
+            <h2>
+                <span id="leftPanelTitle">📜 피드</span> 
+                <div style="display:flex; gap:4px;">
+                    <button id="showAllBtn" style="width:auto; padding:4px 8px; font-size:11px;">전체</button>
+                    <button id="expandFeedBtn" style="width:auto; padding:4px 8px; font-size:11px; background:#74b9ff; color:white;">넓게보기</button>
+                    <button id="collapseFeedBtn" style="display:none; width:auto; padding:4px 8px; font-size:11px; background:#ff7675; color:white;">돌아가기</button>
+                </div>
+            </h2>
             <div id="leftRecordsArea"></div>
         </div>
 
@@ -185,6 +219,28 @@
         let editingRecordId = null;
         window.workingImages = [];
 
+        // 🔥 피드 넓게보기(전체화면) & 돌아가기 로직
+        document.getElementById('expandFeedBtn').onclick = () => {
+            document.getElementById('mainContainer').classList.add('feed-fullscreen');
+            document.getElementById('expandFeedBtn').style.display = 'none';
+            document.getElementById('showAllBtn').style.display = 'none';
+            document.getElementById('collapseFeedBtn').style.display = 'block';
+            
+            // 넓게 볼 때는 전체 피드를 시원하게 보여주기 위해 날짜 필터 해제!
+            currentSelectedDate = null;
+            renderLeftPanel(null);
+        };
+
+        document.getElementById('collapseFeedBtn').onclick = () => {
+            document.getElementById('mainContainer').classList.remove('feed-fullscreen');
+            document.getElementById('expandFeedBtn').style.display = 'block';
+            document.getElementById('showAllBtn').style.display = 'block';
+            document.getElementById('collapseFeedBtn').style.display = 'none';
+            
+            // 화면이 원상복구될 때 달력 크기 재조정 (안그러면 달력이 놀라서 찌그러집니다)
+            setTimeout(() => { calendar.updateSize(); }, 300);
+        };
+
         window.resetForm = () => {
             editingRecordId = null;
             window.workingImages = [];
@@ -209,10 +265,13 @@
             const b = document.getElementById('saveBtn');
             b.disabled = false; 
             
-            if (!editingRecordId) {
-                window.resetForm(); 
-            }
+            if (!editingRecordId) { window.resetForm(); }
             renderLeftPanel(d);
+            
+            // 만약 모바일 등에서 날짜를 클릭했는데 넓게보기 모드라면, 원상복구시켜서 글쓰기 창을 보여줌
+            if(document.getElementById('mainContainer').classList.contains('feed-fullscreen')) {
+                document.getElementById('collapseFeedBtn').click();
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -235,7 +294,7 @@
             calendar.render();
 
             document.getElementById('monthPicker').onchange = (e) => { if(e.target.value) calendar.gotoDate(e.target.value + '-01'); };
-            document.getElementById('showAllBtn').onclick = () => renderLeftPanel(null);
+            document.getElementById('showAllBtn').onclick = () => { currentSelectedDate = null; renderLeftPanel(null); };
             document.getElementById('bellBtn').onclick = (e) => { 
                 const d = document.getElementById('notiDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block';
                 document.getElementById('notiBadge').style.display = 'none'; e.stopPropagation();
@@ -360,6 +419,11 @@
                 <div style="margin-top:10px;">${(r.comments||[]).map(c=>`<div style="background:#fdfafb; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #f4e8ec;"><small><strong>${c.author}</strong></small><p style="margin:4px 0 0 0; font-size:12px;">${c.text}</p></div>`).join('')}</div>
                 <div style="display:flex; gap:8px; margin-top:15px;"><input type="text" id="cA_${rid}" placeholder="이름" style="width:60px; margin:0; padding:6px; font-size:12px;"><input type="text" id="cT_${rid}" placeholder="댓글 입력..." style="flex:1; margin:0; padding:6px; font-size:12px;"><button onclick="addComment('${rid}')" style="width:auto; padding:6px 12px; background:var(--main-pink); border:none; border-radius:8px; color:white; font-size:12px;">등록</button></div></div>`;
             document.getElementById('recordDetailArea').innerHTML = h;
+
+            // 상세 기록을 눌렀을 때 전체화면 모드라면 자동으로 닫아줍니다!
+            if(document.getElementById('mainContainer').classList.contains('feed-fullscreen')) {
+                document.getElementById('collapseFeedBtn').click();
+            }
         };
 
         window.editRecord = (rid) => {
