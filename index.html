@@ -44,9 +44,23 @@
         #leftRecordsArea::-webkit-scrollbar, .noti-dropdown::-webkit-scrollbar, #recordDetailArea::-webkit-scrollbar { width: 6px; }
         #leftRecordsArea::-webkit-scrollbar-thumb, .noti-dropdown::-webkit-scrollbar-thumb, #recordDetailArea::-webkit-scrollbar-thumb { background: #ebd5de; border-radius: 3px; }
 
-        .left-card { border: 1px solid var(--border-pink); border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; background: #fff; transition: transform 0.2s; }
+        /* 🔥 사파리 횡포 진압: 카드를 Flex로 변경하여 사진과 텍스트 영역을 엄격히 분리 */
+        .left-card { 
+            border: 1px solid var(--border-pink); border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; background: #fff; transition: transform 0.2s; 
+            display: flex; flex-direction: column; height: 100%; /* 그리드 셀 꽉 채우기 */
+        }
         .left-card:hover { transform: translateY(-2px); border-color: #c993a8; }
-        .left-card-img { width: 100%; height: 100px; object-fit: cover; }
+        .left-card-img { 
+            width: 100%; height: 100px; object-fit: cover; 
+            flex-shrink: 0; display: block; /* 🔥 사파리 팽창 방지 부적 */
+        }
+        .left-card-noimg {
+            width: 100%; height: 40px; background: #fffafb;
+            flex-shrink: 0; display: block;
+        }
+        .left-card-content {
+            padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+        }
         
         #recordDetailArea { flex: 1; border: 1.5px dashed var(--border-pink); border-radius: 15px; padding: 15px; overflow-y: auto; background: #fffcfd; min-height: 250px; position: relative; }
         
@@ -60,7 +74,7 @@
         #editImagePreview { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
         .edit-thumb-wrap { position: relative; width: 65px; height: 65px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-pink); box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: grab; background: #fff; }
         .edit-thumb-wrap:active { cursor: grabbing; }
-        .edit-thumb { width: 100%; height: 100%; object-fit: cover; }
+        .edit-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
         .edit-thumb-del { position: absolute; top: 2px; right: 2px; background: rgba(255, 118, 117, 0.9); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding:0; }
         
         .thumb-nav { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); }
@@ -71,7 +85,7 @@
         /* ========================================= */
         .dashboard-container.feed-fullscreen .center-panel,
         .dashboard-container.feed-fullscreen .right-panel {
-            display: none !important; /* 전체화면 시 다른 패널은 숨김 */
+            display: none !important;
         }
         .dashboard-container.feed-fullscreen .left-panel {
             flex: 1 1 100% !important;
@@ -80,17 +94,19 @@
             order: 1 !important;
         }
         .dashboard-container.feed-fullscreen #leftRecordsArea {
-            max-height: calc(100vh - 80px) !important; /* 스크롤 높이 꽉 채우기 */
-            display: grid; /* 🔥 바둑판 배열 마법 */
+            max-height: calc(100vh - 80px) !important; 
+            display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 12px;
             align-content: start;
+            align-items: stretch; /* 카드 높이 균일하게 */
         }
         .dashboard-container.feed-fullscreen .left-card {
-            margin-bottom: 0; /* 그리드 갭으로 대체 */
+            margin-bottom: 0; 
         }
-        .dashboard-container.feed-fullscreen .left-card-img {
-            height: 140px; /* 썸네일도 더 시원하게! */
+        .dashboard-container.feed-fullscreen .left-card-img,
+        .dashboard-container.feed-fullscreen .left-card-noimg {
+            height: 140px; /* 갤러리 모드일 때 썸네일 시원하게 확장 */
         }
 
         /* ========================================= */
@@ -125,8 +141,8 @@
             .action-btn { font-size: 10px; padding: 5px 10px; }
             
             #leftRecordsArea { max-height: 280px; }
-            .left-card-img { height: 80px; }
-            .left-card > div { padding: 8px !important; }
+            .left-card-img { height: 90px; }
+            .left-card-content { padding: 8px; }
             
             #recordDetailArea { padding: 12px; min-height: 200px; }
             #recordDetailArea h3 { font-size: 16px; margin-bottom: 3px !important; }
@@ -135,9 +151,8 @@
             
             .edit-thumb-wrap { width: 55px; height: 55px; }
 
-            /* 모바일에서 전체화면일 때 바둑판 크기 조정 */
             .dashboard-container.feed-fullscreen #leftRecordsArea {
-                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             }
         }
     </style>
@@ -219,14 +234,12 @@
         let editingRecordId = null;
         window.workingImages = [];
 
-        // 🔥 피드 넓게보기(전체화면) & 돌아가기 로직
         document.getElementById('expandFeedBtn').onclick = () => {
             document.getElementById('mainContainer').classList.add('feed-fullscreen');
             document.getElementById('expandFeedBtn').style.display = 'none';
             document.getElementById('showAllBtn').style.display = 'none';
             document.getElementById('collapseFeedBtn').style.display = 'block';
             
-            // 넓게 볼 때는 전체 피드를 시원하게 보여주기 위해 날짜 필터 해제!
             currentSelectedDate = null;
             renderLeftPanel(null);
         };
@@ -237,7 +250,6 @@
             document.getElementById('showAllBtn').style.display = 'block';
             document.getElementById('collapseFeedBtn').style.display = 'none';
             
-            // 화면이 원상복구될 때 달력 크기 재조정 (안그러면 달력이 놀라서 찌그러집니다)
             setTimeout(() => { calendar.updateSize(); }, 300);
         };
 
@@ -268,7 +280,6 @@
             if (!editingRecordId) { window.resetForm(); }
             renderLeftPanel(d);
             
-            // 만약 모바일 등에서 날짜를 클릭했는데 넓게보기 모드라면, 원상복구시켜서 글쓰기 창을 보여줌
             if(document.getElementById('mainContainer').classList.contains('feed-fullscreen')) {
                 document.getElementById('collapseFeedBtn').click();
             }
@@ -385,6 +396,7 @@
             window.renderImagePreview();
         };
 
+        // 🔥 사파리 호환성 해결을 위해 업데이트된 렌더링 로직!
         function renderLeftPanel(fDate) {
             const area = document.getElementById('leftRecordsArea');
             let filtered = fDate ? window.allRecords.filter(r => r.date === fDate) : [...window.allRecords].sort((a,b)=>b.timestamp - a.timestamp);
@@ -393,8 +405,11 @@
             if(!filtered.length) { area.innerHTML = '<p style="text-align:center; color:#aaa; font-size:12px; padding: 20px 0;">기록이 없습니다.</p>'; return; }
             area.innerHTML = filtered.map(r => `
                 <div class="left-card" onclick="selectRecord('${r.id}')">
-                    ${r.images?.[0] ? `<img src="${r.images[0]}" class="left-card-img">` : '<div style="height:40px; background:#fffafb;"></div>'}
-                    <div style="padding:10px;"><strong>${r.title}</strong><br><small style="color:#999;">${r.date}</small></div>
+                    ${r.images?.[0] ? `<img src="${r.images[0]}" class="left-card-img">` : '<div class="left-card-noimg"></div>'}
+                    <div class="left-card-content">
+                        <strong style="font-size:14px; color:#8e5c70;">${r.title}</strong>
+                        <div style="margin-top:4px;"><small style="color:#999;">${r.date}</small></div>
+                    </div>
                 </div>
             `).join('');
         }
@@ -420,7 +435,6 @@
                 <div style="display:flex; gap:8px; margin-top:15px;"><input type="text" id="cA_${rid}" placeholder="이름" style="width:60px; margin:0; padding:6px; font-size:12px;"><input type="text" id="cT_${rid}" placeholder="댓글 입력..." style="flex:1; margin:0; padding:6px; font-size:12px;"><button onclick="addComment('${rid}')" style="width:auto; padding:6px 12px; background:var(--main-pink); border:none; border-radius:8px; color:white; font-size:12px;">등록</button></div></div>`;
             document.getElementById('recordDetailArea').innerHTML = h;
 
-            // 상세 기록을 눌렀을 때 전체화면 모드라면 자동으로 닫아줍니다!
             if(document.getElementById('mainContainer').classList.contains('feed-fullscreen')) {
                 document.getElementById('collapseFeedBtn').click();
             }
