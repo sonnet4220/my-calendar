@@ -44,7 +44,6 @@
         #leftRecordsArea::-webkit-scrollbar, .noti-dropdown::-webkit-scrollbar, #recordDetailArea::-webkit-scrollbar { width: 6px; }
         #leftRecordsArea::-webkit-scrollbar-thumb, .noti-dropdown::-webkit-scrollbar-thumb, #recordDetailArea::-webkit-scrollbar-thumb { background: #ebd5de; border-radius: 3px; }
 
-        /* 🔥 카드가 길어지는 대참사 해결: height: 100% 삭제, 내용물에 맞게 크기 조절! */
         .left-card { 
             border: 1px solid var(--border-pink); border-radius: 12px; margin-bottom: 10px; cursor: pointer; overflow: hidden; background: #fff; transition: transform 0.2s; 
             display: flex; flex-direction: column; 
@@ -81,7 +80,7 @@
         .thumb-nav button { background: none; border: none; color: white; font-size: 10px; cursor: pointer; padding: 2px 4px; width: auto; font-weight: bold; }
 
         /* ========================================= */
-        /* 🔥 피드 전체화면(갤러리) 모드 */
+        /* 🔥 피드 넓게보기(갤러리) 모드 기본 설정 (PC 기준) */
         /* ========================================= */
         .dashboard-container.feed-fullscreen .center-panel,
         .dashboard-container.feed-fullscreen .right-panel {
@@ -101,17 +100,9 @@
             align-content: start;
             align-items: stretch;
         }
-        
-        /* 🔥 오직 갤러리 모드일 때만 높이를 100% 꽉 채웁니다! */
-        .dashboard-container.feed-fullscreen .left-card {
-            margin-bottom: 0; 
-            height: 100%; 
-        }
-        
+        .dashboard-container.feed-fullscreen .left-card { margin-bottom: 0; height: 100%; }
         .dashboard-container.feed-fullscreen .left-card-img,
-        .dashboard-container.feed-fullscreen .left-card-noimg {
-            height: 140px; 
-        }
+        .dashboard-container.feed-fullscreen .left-card-noimg { height: 140px; }
 
         /* ========================================= */
         /* 🔥 PC 화면 비율 유지 */
@@ -126,7 +117,8 @@
         }
 
         /* ========================================= */
-        /* 🔥 모바일 초정밀 다이어트 */
+        /* 🔥 모바일 초정밀 다이어트 및 사파리 갤러리 횡포 진압 */
+        /* ========================================= */
         @media (max-width: 768px) {
             body { font-size: 13px; }
             .dashboard-container { padding: 6px; gap: 10px; }
@@ -155,8 +147,39 @@
             
             .edit-thumb-wrap { width: 55px; height: 55px; }
 
+            /* 🔥 모바일 넓게보기(갤러리) 모드 완벽 분리 마법! */
             .dashboard-container.feed-fullscreen #leftRecordsArea {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                grid-template-columns: repeat(2, 1fr); /* 무조건 딱 떨어지는 2열 배치 */
+                gap: 10px;
+                align-items: start; /* stretch를 꺼서 사파리 팽창 방지 */
+            }
+            .dashboard-container.feed-fullscreen .left-card {
+                display: block; /* Flex를 아예 깨버려서 버그 원천 차단 */
+                height: auto; 
+            }
+            .dashboard-container.feed-fullscreen .left-card-img,
+            .dashboard-container.feed-fullscreen .left-card-noimg {
+                height: 120px; /* 사진은 정사각형 느낌으로 고정 */
+                width: 100%;
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+            .dashboard-container.feed-fullscreen .left-card-content {
+                display: block;
+                text-align: center; /* 텍스트 가운데 정렬로 갤러리 느낌 물씬 */
+                padding: 8px 6px;
+            }
+            /* 제목이 2줄로 넘쳐서 찌그러지는 것 방지 (...) */
+            .dashboard-container.feed-fullscreen .left-card-content strong {
+                display: block;
+                font-size: 13px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis; 
+            }
+            .dashboard-container.feed-fullscreen .left-card-content div {
+                margin-top: 4px;
+                font-size: 11px;
             }
         }
     </style>
@@ -400,6 +423,7 @@
             window.renderImagePreview();
         };
 
+        // 🔥 모바일 사파리 호환 렌더링 로직 유지
         function renderLeftPanel(fDate) {
             const area = document.getElementById('leftRecordsArea');
             let filtered = fDate ? window.allRecords.filter(r => r.date === fDate) : [...window.allRecords].sort((a,b)=>b.timestamp - a.timestamp);
@@ -410,8 +434,8 @@
                 <div class="left-card" onclick="selectRecord('${r.id}')">
                     ${r.images?.[0] ? `<img src="${r.images[0]}" class="left-card-img">` : '<div class="left-card-noimg"></div>'}
                     <div class="left-card-content">
-                        <strong style="font-size:14px; color:#8e5c70;">${r.title}</strong>
-                        <div style="margin-top:4px;"><small style="color:#999;">${r.date}</small></div>
+                        <strong style="color:#8e5c70;">${r.title}</strong>
+                        <div><small style="color:#999;">${r.date}</small></div>
                     </div>
                 </div>
             `).join('');
