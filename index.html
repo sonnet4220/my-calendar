@@ -15,7 +15,6 @@
         :root { --main-pink: #dca8bd; --bg-pink: #fdf8f9; --border-pink: #ebd5de; }
         body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-pink); color: #4a4a4a; min-height: 100vh; }
         
-        /* 전체 틀 */
         .dashboard-container { display: flex; flex-direction: column; padding: 10px; gap: 15px; box-sizing: border-box; width: 100%; }
 
         .center-panel { order: 1; }
@@ -68,12 +67,17 @@
         .delete-btn { background: #ff7675; }
         .delete-btn:hover { background: #d63031; }
 
-        /* 🔥 수정 시 나타나는 기존 사진 썸네일 미리보기 스타일 */
+        /* 🔥 통합 이미지 썸네일 스타일 (순서 변경 버튼 포함) */
         #editImagePreview { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-        .edit-thumb-wrap { position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-pink); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .edit-thumb-wrap { position: relative; width: 65px; height: 65px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-pink); box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: grab; background: #fff; }
+        .edit-thumb-wrap:active { cursor: grabbing; }
         .edit-thumb { width: 100%; height: 100%; object-fit: cover; }
-        .edit-thumb-del { position: absolute; top: 3px; right: 3px; background: rgba(255, 118, 117, 0.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
-        .edit-thumb-del:hover { background: #d63031; }
+        .edit-thumb-del { position: absolute; top: 2px; right: 2px; background: rgba(255, 118, 117, 0.9); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding:0; }
+        
+        /* 모바일용 좌우 이동 버튼 */
+        .thumb-nav { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); }
+        .thumb-nav button { background: none; border: none; color: white; font-size: 10px; cursor: pointer; padding: 2px 4px; width: auto; font-weight: bold; }
+        .thumb-nav button:hover { background: rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
@@ -107,8 +111,13 @@
             
             <div id="editImagePreview"></div>
             
-            <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:11px; margin-bottom:8px; width:100%;" title="새로운 사진을 추가하려면 여기를 누르세요">
-            <button id="saveBtn" disabled>날짜 선택 후 저장</button>
+            <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:11px; margin-bottom:8px; width:100%;" title="여기를 눌러 사진을 추가하세요">
+            
+            <div style="display:flex; gap:6px;">
+                <button id="cancelEditBtn" style="display:none; background:#b2bec3; width:auto; flex:1;">취소</button>
+                <button id="saveBtn" disabled style="flex:2;">날짜 선택 후 저장</button>
+            </div>
+            
             <hr style="border:0.5px solid var(--border-pink); margin:15px 0;">
             <div id="recordDetailArea"><p style="text-align:center; color:#aaa; margin-top:50px;">날짜를 누르거나 피드에서 기록을 선택하세요.</p></div>
         </div>
@@ -139,7 +148,27 @@
         let isInitialLoad = true;
         
         let editingRecordId = null;
-        let originalImages = [];
+        
+        // 🔥 이미지 통합 관리 배열 (기존 사진 + 새로 올린 사진 모두 관리)
+        window.workingImages = [];
+
+        // 폼 초기화 및 취소 함수
+        window.resetForm = () => {
+            editingRecordId = null;
+            window.workingImages = [];
+            document.getElementById('titleInput').value=''; 
+            document.getElementById('subtitleInput').value=''; 
+            document.getElementById('textContent').value=''; 
+            document.getElementById('imageUpload').value='';
+            
+            const b = document.getElementById('saveBtn');
+            b.innerText = '저장하기';
+            b.style.background = 'var(--main-pink)';
+            if(!currentSelectedDate) b.disabled = true;
+            
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            window.renderImagePreview();
+        };
 
         function selectDate(d) {
             currentSelectedDate = d;
@@ -149,10 +178,7 @@
             b.disabled = false; 
             
             if (!editingRecordId) {
-                b.innerText = '저장하기';
-                b.style.background = 'var(--main-pink)';
-                originalImages = []; // 수정모드가 아닐 땐 기존사진 초기화
-                renderEditImagePreview();
+                window.resetForm(); // 다른 날짜 클릭 시 폼 깨끗하게 비우기
             }
             renderLeftPanel(d);
         }
@@ -161,12 +187,7 @@
             calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth', locale: 'ko', height: '100%',
                 headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-                dateClick: (i) => {
-                    editingRecordId = null;
-                    document.getElementById('titleInput').value=''; document.getElementById('subtitleInput').value=''; document.getElementById('textContent').value='';
-                    document.getElementById('imageUpload').value=''; // 새 사진 입력 초기화
-                    selectDate(i.dateStr);
-                },
+                dateClick: (i) => selectDate(i.dateStr),
                 eventClick: (i) => { selectDate(i.event.startStr); i.jsEvent.preventDefault(); },
                 eventContent: (arg) => {
                     let img = arg.event.extendedProps.imageUrl;
@@ -188,6 +209,19 @@
                 document.getElementById('notiBadge').style.display = 'none'; e.stopPropagation();
             };
             document.getElementById('backupBtn').onclick = () => backupData();
+            
+            // 취소 버튼 연결
+            document.getElementById('cancelEditBtn').onclick = () => window.resetForm();
+
+            // 🔥 파일 첨부 시 즉시 썸네일로 추가!
+            document.getElementById('imageUpload').addEventListener('change', function(e) {
+                for(let file of e.target.files) {
+                    const blobUrl = URL.createObjectURL(file);
+                    window.workingImages.push({ type: 'new', url: blobUrl, file: file, name: file.name });
+                }
+                this.value = ''; // 같은 파일 또 올릴 수 있게 초기화
+                window.renderImagePreview();
+            });
 
             onSnapshot(query(collection(db, "records"), orderBy("timestamp", "asc")), (snap) => {
                 window.allRecords = []; calendar.removeAllEvents();
@@ -220,6 +254,52 @@
                 if (window.currentSelectedId) window.selectRecord(window.currentSelectedId);
             });
         });
+
+        // 🔥 이미지 순서 변경용 드래그 앤 드롭 로직 (PC용)
+        let dragStartIndex;
+        window.handleDragStart = (e, idx) => { dragStartIndex = idx; setTimeout(() => e.target.style.opacity = '0.5', 0); };
+        window.handleDragOver = (e) => { e.preventDefault(); };
+        window.handleDrop = (e, dropIndex) => {
+            e.preventDefault();
+            const item = window.workingImages[dragStartIndex];
+            window.workingImages.splice(dragStartIndex, 1);
+            window.workingImages.splice(dropIndex, 0, item);
+            window.renderImagePreview();
+        };
+        window.handleDragEnd = (e) => { e.target.style.opacity = '1'; };
+
+        // 🔥 모바일용 좌우 이동 버튼 로직
+        window.moveImg = (idx, dir) => {
+            const newIdx = idx + dir;
+            if (newIdx < 0 || newIdx >= window.workingImages.length) return;
+            const item = window.workingImages[idx];
+            window.workingImages.splice(idx, 1);
+            window.workingImages.splice(newIdx, 0, item);
+            window.renderImagePreview();
+        };
+
+        // 🔥 통합 이미지 미리보기 렌더링
+        window.renderImagePreview = () => {
+            const preview = document.getElementById('editImagePreview');
+            if(window.workingImages.length === 0) { preview.innerHTML = ''; return; }
+            preview.innerHTML = window.workingImages.map((item, idx) => `
+                <div class="edit-thumb-wrap" draggable="true"
+                     ondragstart="handleDragStart(event, ${idx})" ondragover="handleDragOver(event)"
+                     ondrop="handleDrop(event, ${idx})" ondragend="handleDragEnd(event)">
+                    <img src="${item.url}" class="edit-thumb">
+                    <button class="edit-thumb-del" type="button" onclick="removeWorkingImage(${idx})" title="삭제">X</button>
+                    <div class="thumb-nav">
+                        ${idx > 0 ? `<button type="button" onclick="moveImg(${idx}, -1)">◀</button>` : '<span></span>'}
+                        ${idx < window.workingImages.length - 1 ? `<button type="button" onclick="moveImg(${idx}, 1)">▶</button>` : '<span></span>'}
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.removeWorkingImage = (idx) => {
+            window.workingImages.splice(idx, 1);
+            window.renderImagePreview();
+        };
 
         function renderLeftPanel(fDate) {
             const area = document.getElementById('leftRecordsArea');
@@ -257,39 +337,20 @@
             document.getElementById('recordDetailArea').innerHTML = h;
         };
 
-        // 🔥 이미지 수정 미리보기 렌더링 함수
-        window.renderEditImagePreview = () => {
-            const preview = document.getElementById('editImagePreview');
-            if(originalImages.length === 0) {
-                preview.innerHTML = ''; return;
-            }
-            preview.innerHTML = originalImages.map((url, idx) => `
-                <div class="edit-thumb-wrap">
-                    <img src="${url}" class="edit-thumb">
-                    <button class="edit-thumb-del" onclick="removeOriginalImage(${idx})" title="이 사진 지우기">X</button>
-                </div>
-            `).join('');
-        };
-
-        // 🔥 개별 사진 삭제 함수
-        window.removeOriginalImage = (idx) => {
-            originalImages.splice(idx, 1); // 배열에서 해당 사진 빼기
-            renderEditImagePreview(); // 화면 다시 그리기
-        };
-
         window.editRecord = (rid) => {
             const r = window.allRecords.find(x => x.id === rid); if(!r) return;
             
             editingRecordId = rid;
-            originalImages = [...(r.images || [])]; // 깊은 복사로 원본 보존
             
+            // 기존 사진을 workingImages 배열로 변환
+            window.workingImages = (r.images || []).map(url => ({ type: 'existing', url: url }));
+
             document.getElementById('titleInput').value = r.title;
             document.getElementById('subtitleInput').value = r.subtitle || '';
             document.getElementById('authorInput').value = r.author;
             document.getElementById('textContent').value = r.text;
             
-            // 기존 사진 미리보기 띄우기!
-            renderEditImagePreview();
+            window.renderImagePreview();
 
             selectDate(r.date); 
             calendar.gotoDate(r.date);
@@ -298,8 +359,11 @@
             btn.innerText = '수정 완료하기';
             btn.style.background = '#8e5c70'; 
             
+            // 취소 버튼 노출
+            document.getElementById('cancelEditBtn').style.display = 'block';
+            
             const t = document.getElementById('toastNotification');
-            t.innerText = "✍️ 사진 우측 상단의 'X'를 눌러 삭제하거나, 아래 파일 선택으로 새 사진을 추가하세요!"; 
+            t.innerText = "✍️ 사진을 드래그하거나 화살표를 눌러 순서를 바꾸세요!"; 
             t.style.opacity = "1"; setTimeout(() => { t.style.opacity = "0"; }, 4000);
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -324,30 +388,30 @@
 
         document.getElementById('saveBtn').onclick = async () => {
             const t = document.getElementById('titleInput').value; const s = document.getElementById('subtitleInput').value; 
-            const a = document.getElementById('authorInput').value; const txt = document.getElementById('textContent').value; const f = document.getElementById('imageUpload');
+            const a = document.getElementById('authorInput').value; const txt = document.getElementById('textContent').value;
             if(!t || !a || !txt) return;
             
             const btn = document.getElementById('saveBtn'); 
             btn.disabled = true; btn.innerText = editingRecordId ? '수정 중...' : '저장 중...';
             
             try {
-                // 🔥 남은 기존 사진들을 베이스로 시작합니다.
-                let finalUrls = [...originalImages]; 
+                let finalUrls = []; 
                 
-                // 새로 추가된 사진들을 올려서 finalUrls에 합칩니다.
-                if (f.files.length > 0) {
-                    for(let file of f.files) {
-                        const comp = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1024 });
+                // workingImages 배열을 순회하며 진짜 URL을 만듭니다.
+                for(let item of window.workingImages) {
+                    if (item.type === 'existing') {
+                        finalUrls.push(item.url); // 기존 사진은 URL 그대로 유지
+                    } else if (item.type === 'new') {
+                        // 새 사진은 압축 & 업로드 진행
+                        const comp = await imageCompression(item.file, { maxSizeMB: 0.5, maxWidthOrHeight: 1024 });
                         const fileName = Date.now() + '_' + comp.name;
                         const sRef = ref(storage, 'images/' + fileName);
                         await uploadBytes(sRef, comp); 
                         const downloadUrl = await getDownloadURL(sRef);
-                        finalUrls.push(downloadUrl); // 새 사진 합체!
+                        finalUrls.push(downloadUrl);
 
                         fetch(GAS_URL, {
-                            method: "POST",
-                            mode: "no-cors",
-                            headers: { "Content-Type": "text/plain" },
+                            method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" },
                             body: JSON.stringify({ url: downloadUrl, name: `${currentSelectedDate}_${t}_${fileName}` })
                         }).catch(e => console.log("드라이브 전송 실패:", e));
                     }
@@ -357,18 +421,13 @@
                     await updateDoc(doc(db, "records", editingRecordId), { 
                         date: currentSelectedDate, title: t, subtitle: s, author: a, text: txt, images: finalUrls
                     });
-                    editingRecordId = null; 
-                    originalImages = [];
-                    renderEditImagePreview(); // UI 지우기
                 } else {
                     await addDoc(collection(db, "records"), { 
                         date: currentSelectedDate, title: t, subtitle: s, author: a, text: txt, images: finalUrls, timestamp: Date.now(), comments: [] 
                     });
                 }
 
-                document.getElementById('titleInput').value=''; document.getElementById('subtitleInput').value=''; document.getElementById('textContent').value=''; f.value='';
-                btn.innerText = '저장하기';
-                btn.style.background = 'var(--main-pink)';
+                window.resetForm(); // 성공 후 깔끔하게 폼 비우기
                 
             } catch(e) { console.error(e); } finally { btn.disabled = false; }
         };
