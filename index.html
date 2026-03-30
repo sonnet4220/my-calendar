@@ -13,7 +13,7 @@
 
     <style>
         :root { --main-pink: #dca8bd; --bg-pink: #fdf8f9; --border-pink: #ebd5de; }
-        body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-pink); color: #4a4a4a; min-height: 100vh; }
+        body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; background-color: var(--bg-pink); color: #4a4a4a; min-height: 100vh; font-size: 14px; word-break: keep-all; }
         
         .dashboard-container { display: flex; flex-direction: column; padding: 10px; gap: 15px; box-sizing: border-box; width: 100%; }
 
@@ -24,21 +24,11 @@
         .calendar-wrapper { height: 450px; position: relative; border: 1px solid #f4e8ec; border-radius: 12px; overflow: hidden; background: #fff; margin-top: 5px; }
         #leftRecordsArea { overflow-y: auto; max-height: 350px; padding-right: 5px; }
 
-        @media (min-width: 1024px) {
-            .dashboard-container { flex-direction: row; height: 100vh; padding: 20px; overflow: hidden; }
-            .left-panel { flex: 1; order: 1; } 
-            .center-panel { flex: 2.8; order: 2; } 
-            .right-panel { flex: 1.5; order: 3; }
-            body { overflow: hidden; }
-            .calendar-wrapper { flex: 1; height: auto; min-height: 450px; }
-            #leftRecordsArea { flex: 1; max-height: none; }
-        }
-
         .panel { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(200, 180, 185, 0.12); display: flex; flex-direction: column; width: 100%; box-sizing: border-box; min-height: 0; }
         h2 { font-size: 18px; margin: 0 0 10px 0; color: #a87b8d; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         
         input[type="text"], textarea, input[type="month"] { padding: 10px; border: 1px solid var(--border-pink); border-radius: 8px; width: 100%; box-sizing: border-box; background: #fffafb; font-size: 14px; margin-bottom: 8px; font-family: inherit; }
-        button { padding: 12px; background: var(--main-pink); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; font-family: inherit; }
+        button { padding: 12px; background: var(--main-pink); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; width: 100%; font-family: inherit; font-size: 14px; }
 
         #calendar { height: 100% !important; table-layout: fixed !important; }
         .fc-daygrid-day-frame { height: 100% !important; min-height: 70px !important; display: flex !important; flex-direction: column; cursor: pointer; }
@@ -67,30 +57,75 @@
         .delete-btn { background: #ff7675; }
         .delete-btn:hover { background: #d63031; }
 
-        /* 🔥 통합 이미지 썸네일 스타일 (순서 변경 버튼 포함) */
         #editImagePreview { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
         .edit-thumb-wrap { position: relative; width: 65px; height: 65px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-pink); box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: grab; background: #fff; }
         .edit-thumb-wrap:active { cursor: grabbing; }
         .edit-thumb { width: 100%; height: 100%; object-fit: cover; }
         .edit-thumb-del { position: absolute; top: 2px; right: 2px; background: rgba(255, 118, 117, 0.9); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; padding:0; }
         
-        /* 모바일용 좌우 이동 버튼 */
         .thumb-nav { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); }
         .thumb-nav button { background: none; border: none; color: white; font-size: 10px; cursor: pointer; padding: 2px 4px; width: auto; font-weight: bold; }
-        .thumb-nav button:hover { background: rgba(0,0,0,0.8); }
+
+        /* ========================================= */
+        /* 🔥 PC 화면 비율 유지 */
+        @media (min-width: 1024px) {
+            .dashboard-container { flex-direction: row; height: 100vh; padding: 20px; overflow: hidden; }
+            .left-panel { flex: 1; order: 1; } 
+            .center-panel { flex: 2.8; order: 2; } 
+            .right-panel { flex: 1.5; order: 3; }
+            body { overflow: hidden; }
+            .calendar-wrapper { flex: 1; height: auto; min-height: 450px; }
+            #leftRecordsArea { flex: 1; max-height: none; }
+        }
+
+        /* ========================================= */
+        /* 🔥 모바일 초정밀 다이어트 (폰트 & 여백 축소) */
+        @media (max-width: 768px) {
+            body { font-size: 13px; }
+            .dashboard-container { padding: 6px; gap: 10px; }
+            .panel { padding: 12px; border-radius: 16px; }
+            
+            h2 { font-size: 15px; margin-bottom: 8px; }
+            input[type="text"], textarea, input[type="month"] { font-size: 13px; padding: 8px; margin-bottom: 6px; }
+            button { font-size: 13px; padding: 10px; border-radius: 10px; }
+            
+            /* 달력 크기도 살짝 컴팩트하게 */
+            .calendar-wrapper { min-height: 380px; height: 380px; margin-top: 2px; }
+            .fc-daygrid-day-top { font-size: 10px !important; padding: 1px 0 !important; }
+            .thumb-box { width: 30px; height: 30px; }
+            .cell-letter { width: 30px; height: 30px; font-size: 11px; }
+
+            /* 버튼류 크기 다이어트 */
+            .tool-btn { font-size: 12px; padding: 4px 8px; }
+            .action-btn { font-size: 10px; padding: 5px 10px; }
+            #showAllBtn { font-size: 10px !important; padding: 2px 6px !important; }
+
+            /* 피드 및 상세 뷰어 여백 축소 */
+            #leftRecordsArea { max-height: 280px; }
+            .left-card-img { height: 80px; }
+            .left-card > div { padding: 8px !important; }
+            
+            #recordDetailArea { padding: 12px; min-height: 200px; }
+            #recordDetailArea h3 { font-size: 16px; margin-bottom: 3px !important; }
+            #recordDetailArea h5 { font-size: 13px; margin-bottom: 8px !important; }
+            #recordDetailArea p { font-size: 13px; line-height: 1.6; margin-bottom: 12px !important; }
+            
+            /* 썸네일 미리보기 크기 축소 */
+            .edit-thumb-wrap { width: 55px; height: 55px; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="toastNotification" style="position: fixed; top: 20px; right: 20px; background: var(--main-pink); color: white; padding: 12px 20px; border-radius: 10px; z-index: 10001; opacity: 0; transition: 0.4s; pointer-events: none; font-weight: 600;">알림</div>
+    <div id="toastNotification" style="position: fixed; top: 20px; right: 20px; background: var(--main-pink); color: white; padding: 12px 20px; border-radius: 10px; z-index: 10001; opacity: 0; transition: 0.4s; pointer-events: none; font-weight: 600; font-size: 13px;">알림</div>
 
     <div class="dashboard-container">
         <div class="panel center-panel">
             <h2>
-                <div style="display:flex; align-items:center; gap:8px;">📅 캘린더 <input type="month" id="monthPicker" style="margin:0; width:auto; border:none; background:transparent; font-size:16px; font-weight:bold; color:#a87b8d;"></div>
+                <div style="display:flex; align-items:center; gap:6px;">📅 <input type="month" id="monthPicker" style="margin:0; width:auto; border:none; background:transparent; font-size:15px; font-weight:bold; color:#a87b8d; padding:0;"></div>
                 <div class="header-tools">
                     <div class="tool-btn" id="backupBtn">💾 백업</div>
-                    <div class="tool-btn" id="bellBtn" style="position:relative;">🔔<div id="notiBadge" style="position:absolute; top:0; right:0; width:8px; height:8px; background:#ff7675; border-radius:50%; display:none;"></div></div>
+                    <div class="tool-btn" id="bellBtn" style="position:relative;">🔔<div id="notiBadge" style="position:absolute; top:-2px; right:-2px; width:8px; height:8px; background:#ff7675; border-radius:50%; display:none;"></div></div>
                     <div class="noti-dropdown" id="notiDropdown"><div id="notiListArea"></div></div>
                 </div>
             </h2>
@@ -104,22 +139,22 @@
 
         <div class="panel right-panel">
             <h2>✍️ 기록하기</h2>
-            <p id="selectedDateText" style="color:var(--main-pink); font-weight:700; margin-bottom:8px;">📍 날짜 선택 필요</p>
+            <p id="selectedDateText" style="color:var(--main-pink); font-weight:700; margin-bottom:6px; font-size:13px;">📍 날짜 선택 필요</p>
             <div style="display:flex; gap:5px;"><input type="text" id="titleInput" placeholder="제목"><input type="text" id="authorInput" placeholder="이름" style="width:70px;"></div>
             <input type="text" id="subtitleInput" placeholder="소제목 (선택사항)">
             <textarea id="textContent" rows="2" placeholder="내용을 입력하세요..."></textarea>
             
             <div id="editImagePreview"></div>
             
-            <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:11px; margin-bottom:8px; width:100%;" title="여기를 눌러 사진을 추가하세요">
+            <input type="file" id="imageUpload" accept="image/*" multiple style="font-size:11px; margin-bottom:6px; width:100%;">
             
             <div style="display:flex; gap:6px;">
                 <button id="cancelEditBtn" style="display:none; background:#b2bec3; width:auto; flex:1;">취소</button>
                 <button id="saveBtn" disabled style="flex:2;">날짜 선택 후 저장</button>
             </div>
             
-            <hr style="border:0.5px solid var(--border-pink); margin:15px 0;">
-            <div id="recordDetailArea"><p style="text-align:center; color:#aaa; margin-top:50px;">날짜를 누르거나 피드에서 기록을 선택하세요.</p></div>
+            <hr style="border:0.5px solid var(--border-pink); margin:12px 0;">
+            <div id="recordDetailArea"><p style="text-align:center; color:#aaa; margin-top:30px; font-size:12px;">날짜를 누르거나 피드에서 기록을 선택하세요.</p></div>
         </div>
     </div>
 
@@ -148,11 +183,8 @@
         let isInitialLoad = true;
         
         let editingRecordId = null;
-        
-        // 🔥 이미지 통합 관리 배열 (기존 사진 + 새로 올린 사진 모두 관리)
         window.workingImages = [];
 
-        // 폼 초기화 및 취소 함수
         window.resetForm = () => {
             editingRecordId = null;
             window.workingImages = [];
@@ -178,7 +210,7 @@
             b.disabled = false; 
             
             if (!editingRecordId) {
-                window.resetForm(); // 다른 날짜 클릭 시 폼 깨끗하게 비우기
+                window.resetForm(); 
             }
             renderLeftPanel(d);
         }
@@ -192,11 +224,11 @@
                 eventContent: (arg) => {
                     let img = arg.event.extendedProps.imageUrl;
                     let extra = arg.event.extendedProps.extraCount;
-                    let badgeHtml = extra > 0 ? `<div style="position:absolute; top:-5px; right:-5px; background:#ff7675; color:white; font-size:10px; font-weight:bold; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:10; box-sizing:border-box;">+${extra}</div>` : '';
+                    let badgeHtml = extra > 0 ? `<div style="position:absolute; top:-5px; right:-5px; background:#ff7675; color:white; font-size:9px; font-weight:bold; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:10;">+${extra}</div>` : '';
                     let contentHtml = img 
                         ? `<img src="${img}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;">` 
                         : `<div style="width:100%; height:100%; background:#fff0f5; color:#d16b8b; display:flex; justify-content:center; align-items:center; font-weight:800; border-radius:6px; font-size:12px;">${arg.event.title.charAt(0)}</div>`;
-                    return { html: `<div style="position:relative; width:35px; height:35px; pointer-events:none;">${contentHtml}${badgeHtml}</div>` };
+                    return { html: `<div style="position:relative; width:100%; height:100%; pointer-events:none; display:flex; align-items:center; justify-content:center;"><div class="thumb-box" style="position:relative;">${contentHtml}${badgeHtml}</div></div>` };
                 },
                 datesSet: (i) => { let d = i.view.currentStart; document.getElementById('monthPicker').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
             });
@@ -210,16 +242,14 @@
             };
             document.getElementById('backupBtn').onclick = () => backupData();
             
-            // 취소 버튼 연결
             document.getElementById('cancelEditBtn').onclick = () => window.resetForm();
 
-            // 🔥 파일 첨부 시 즉시 썸네일로 추가!
             document.getElementById('imageUpload').addEventListener('change', function(e) {
                 for(let file of e.target.files) {
                     const blobUrl = URL.createObjectURL(file);
                     window.workingImages.push({ type: 'new', url: blobUrl, file: file, name: file.name });
                 }
-                this.value = ''; // 같은 파일 또 올릴 수 있게 초기화
+                this.value = ''; 
                 window.renderImagePreview();
             });
 
@@ -240,9 +270,7 @@
                     let extraCount = group.length - 1; 
 
                     calendar.addEvent({ 
-                        title: firstRecord.title, 
-                        start: date, 
-                        allDay: true, 
+                        title: firstRecord.title, start: date, allDay: true, 
                         extendedProps: { imageUrl: firstRecord.images?.[0], extraCount: extraCount } 
                     });
                 }
@@ -255,7 +283,6 @@
             });
         });
 
-        // 🔥 이미지 순서 변경용 드래그 앤 드롭 로직 (PC용)
         let dragStartIndex;
         window.handleDragStart = (e, idx) => { dragStartIndex = idx; setTimeout(() => e.target.style.opacity = '0.5', 0); };
         window.handleDragOver = (e) => { e.preventDefault(); };
@@ -268,7 +295,6 @@
         };
         window.handleDragEnd = (e) => { e.target.style.opacity = '1'; };
 
-        // 🔥 모바일용 좌우 이동 버튼 로직
         window.moveImg = (idx, dir) => {
             const newIdx = idx + dir;
             if (newIdx < 0 || newIdx >= window.workingImages.length) return;
@@ -278,7 +304,6 @@
             window.renderImagePreview();
         };
 
-        // 🔥 통합 이미지 미리보기 렌더링
         window.renderImagePreview = () => {
             const preview = document.getElementById('editImagePreview');
             if(window.workingImages.length === 0) { preview.innerHTML = ''; return; }
@@ -324,16 +349,16 @@
                     <button class="action-btn edit-btn" onclick="editRecord('${r.id}')">수정</button>
                     <button class="action-btn delete-btn" onclick="deleteRecord('${r.id}')">삭제</button>
                 </div>
-                <h3 style="margin:0 0 5px 0; color:#8e5c70; padding-right:90px;">${r.title}</h3>
-                ${r.subtitle?`<h5 style="color:#a87b8d; margin:0 0 10px 0;">${r.subtitle}</h5>`:''}
-                <div style="margin-bottom:15px;"><small style="color:#999;">✍️ ${r.author} | 📅 ${r.date}</small></div>
-                <p style="white-space:pre-wrap; line-height:1.7; color:#444; margin-bottom:20px;">${r.text}</p>`;
+                <h3 style="margin:0 0 5px 0; color:#8e5c70; padding-right:80px; font-size:16px;">${r.title}</h3>
+                ${r.subtitle?`<h5 style="color:#a87b8d; margin:0 0 8px 0; font-size:13px;">${r.subtitle}</h5>`:''}
+                <div style="margin-bottom:12px;"><small style="color:#999; font-size:11px;">✍️ ${r.author} | 📅 ${r.date}</small></div>
+                <p style="white-space:pre-wrap; line-height:1.6; color:#444; margin-bottom:20px; font-size:13px;">${r.text}</p>`;
             
             if(r.images) h += r.images.map(img => `<img src="${img}" style="width:100%; border-radius:12px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">`).join('');
             
-            h += `<hr style="border:0.5px solid #eee; margin:20px 0;"><small style="font-weight:bold; color:#8e5c70;">💬 댓글</small>
-                <div style="margin-top:10px;">${(r.comments||[]).map(c=>`<div style="background:#fdfafb; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #f4e8ec;"><small><strong>${c.author}</strong></small><p style="margin:4px 0 0 0; font-size:13px;">${c.text}</p></div>`).join('')}</div>
-                <div style="display:flex; gap:8px; margin-top:15px;"><input type="text" id="cA_${rid}" placeholder="이름" style="width:70px; margin:0;"><input type="text" id="cT_${rid}" placeholder="댓글 입력..." style="flex:1; margin:0;"><button onclick="addComment('${rid}')" style="width:auto; padding:6px 14px; background:var(--main-pink); border:none; border-radius:8px; color:white; font-size:13px;">등록</button></div></div>`;
+            h += `<hr style="border:0.5px solid #eee; margin:20px 0;"><small style="font-weight:bold; color:#8e5c70; font-size:12px;">💬 댓글</small>
+                <div style="margin-top:10px;">${(r.comments||[]).map(c=>`<div style="background:#fdfafb; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #f4e8ec;"><small><strong>${c.author}</strong></small><p style="margin:4px 0 0 0; font-size:12px;">${c.text}</p></div>`).join('')}</div>
+                <div style="display:flex; gap:8px; margin-top:15px;"><input type="text" id="cA_${rid}" placeholder="이름" style="width:60px; margin:0; padding:6px; font-size:12px;"><input type="text" id="cT_${rid}" placeholder="댓글 입력..." style="flex:1; margin:0; padding:6px; font-size:12px;"><button onclick="addComment('${rid}')" style="width:auto; padding:6px 12px; background:var(--main-pink); border:none; border-radius:8px; color:white; font-size:12px;">등록</button></div></div>`;
             document.getElementById('recordDetailArea').innerHTML = h;
         };
 
@@ -342,7 +367,6 @@
             
             editingRecordId = rid;
             
-            // 기존 사진을 workingImages 배열로 변환
             window.workingImages = (r.images || []).map(url => ({ type: 'existing', url: url }));
 
             document.getElementById('titleInput').value = r.title;
@@ -359,11 +383,10 @@
             btn.innerText = '수정 완료하기';
             btn.style.background = '#8e5c70'; 
             
-            // 취소 버튼 노출
             document.getElementById('cancelEditBtn').style.display = 'block';
             
             const t = document.getElementById('toastNotification');
-            t.innerText = "✍️ 사진을 드래그하거나 화살표를 눌러 순서를 바꾸세요!"; 
+            t.innerText = "✍️ 썸네일 아래 화살표(◀▶)를 눌러 순서를 바꾸세요!"; 
             t.style.opacity = "1"; setTimeout(() => { t.style.opacity = "0"; }, 4000);
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -397,12 +420,10 @@
             try {
                 let finalUrls = []; 
                 
-                // workingImages 배열을 순회하며 진짜 URL을 만듭니다.
                 for(let item of window.workingImages) {
                     if (item.type === 'existing') {
-                        finalUrls.push(item.url); // 기존 사진은 URL 그대로 유지
+                        finalUrls.push(item.url); 
                     } else if (item.type === 'new') {
-                        // 새 사진은 압축 & 업로드 진행
                         const comp = await imageCompression(item.file, { maxSizeMB: 0.5, maxWidthOrHeight: 1024 });
                         const fileName = Date.now() + '_' + comp.name;
                         const sRef = ref(storage, 'images/' + fileName);
@@ -427,7 +448,7 @@
                     });
                 }
 
-                window.resetForm(); // 성공 후 깔끔하게 폼 비우기
+                window.resetForm(); 
                 
             } catch(e) { console.error(e); } finally { btn.disabled = false; }
         };
